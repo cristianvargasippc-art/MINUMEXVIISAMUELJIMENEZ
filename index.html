@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGA MINUME XVII - Juego Interactivo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Staatliches&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #0047AB;
+            --light-blue: #3B9DD6;
+            --sky-blue: #87CEEB;
+            --dark-blue: #001F54;
+            --accent-gold: #FFD700;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--dark-blue) 0%, var(--primary-blue) 50%, var(--light-blue) 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Video Intro Screen */
+        .video-intro {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-intro.hidden {
+            display: none;
+        }
+
+        .video-intro video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .skip-video {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            z-index: 10001;
+        }
+
+        .skip-video:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10002;
+            color: white;
+        }
+
+        .video-loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            font-size: 4rem;
+            animation: spinLoader 2s linear infinite;
+        }
+
+        @keyframes spinLoader {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Animated Background Elements */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .plane {
+            position: absolute;
+            font-size: 3rem;
+            animation: flyPlane 15s linear infinite;
+            opacity: 0.3;
+        }
+
+        .plane:nth-child(1) {
+            top: 10%;
+            animation-delay: 0s;
+        }
+
+        .plane:nth-child(2) {
+            top: 30%;
+            animation-delay: 5s;
+        }
+
+        .plane:nth-child(3) {
+            top: 50%;
+            animation-delay: 10s;
+        }
+
+        .plane:nth-child(4) {
+            top: 70%;
+            animation-delay: 3s;
+        }
+
+        @keyframes flyPlane {
+            0% {
+                left: -100px;
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+            100% {
+                left: calc(100% + 100px);
+                transform: translateY(0) rotate(0deg);
+            }
+        }
+
+        .heart-float {
+            position: absolute;
+            font-size: 2rem;
+            animation: floatHeart 8s ease-in-out infinite;
+        }
+
+        @keyframes floatHeart {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.5;
+            }
+            50% {
+                transform: translateY(-50px) rotate(10deg);
+                opacity: 1;
+            }
+        }
+
+        /* Music Controls */
+        .music-control {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(0, 71, 171, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--light-blue);
+        }
+
+        .music-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .music-toggle:hover {
+            transform: scale(1.2) rotate(15deg);
+        }
+
+        .volume-slider {
+            width: 100px;
+            height: 5px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: white;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Samuel Banner */
+        .samuel-banner {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 1s ease;
+        }
+
+        .samuel-logo {
+            max-width: 600px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.5));
+        }
+
+        .banner-subtitle {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--light-blue), var(--accent-gold), var(--sky-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .banner-tagline {
+            font-size: 1.2rem;
+            color: var(--sky-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        /* All screen states */
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Landing Screen */
+        .landing-screen {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-title {
+            font-family: 'Staatliches', cursive;
+            font-size: 5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, white, var(--light-blue), var(--accent-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            text-align: center;
+            color: var(--sky-blue);
+            margin-bottom: 3rem;
+            max-width: 800px;
+        }
+
+        .start-btn {
+            font-family: 'Staatliches', cursive;
+            font-size: 2rem;
+            padding: 20px 60px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
+            border: 3px solid white;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 15px 40px rgba(59, 157, 214, 0.5);
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-btn::before {
+            content: '✈️';
+            position: absolute;
+            left: -50px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            transition: all 0.4s ease;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 20px 50px rgba(59, 157, 214, 0.7);
+            border-color: var(--accent-gold);
+        }
+
+        .start-btn:hover::before {
+            left: 20px;
+        }
+
+        /* Music Intro Screen */
+        .music-intro {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .vinyl-record {
+            font-size: 10rem;
+            animation: spin 4s linear infinite;
+            display: inline-block;
+            filter: drop-shadow(0 0 30px var(--light-blue));
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .music-card {
+            background: rgba(0, 71, 171, 0.3);
+            backdrop-filter: blur(10px);
+            border: 3px solid var(--light-blue);
+            border-radius: 30px;
+            padding: 3rem;
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .music-card h2 {
+            font-family: 'Staatliches', cursive;
+            font-size: 3rem;
+            color: var(--accent-gold);
+            margin-bottom: 2rem;
+        }
+
+        .rhythm-selector {
+            margin: 2rem 0;
+        }
+
+        .rhythm-btn {
+            background: linear-gradient(135deg, rgba(59, 157, 214, 0.3), rgba(0, 71, 171, 0.3));
+            border: 2px solid var(--light-blue);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 0.5rem;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            width: 100%;
+        }
+
+        .rhythm-btn:hover {
+            background: linear-gradient(135deg, rgba(59, 157, 214, 0.6), rgba(0, 71, 171, 0.6));
+            border-color: var(--accent-gold);
+            transform: translateX(10px) scale(1.02);
+        }
+
+        .rhythm-btn.selected {
+            background: linear-gradient(135deg, var(--accent-gold), #FFA500);
+            border-color: var(--accent-gold);
+            font-weight: 700;
+        }
+
+        /* Multiplayer Entry */
+        .multiplayer-entry {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(0, 71, 171, 0.3);
+            backdrop-filter: blur(10px);
+            border: 3px solid var(--light-blue);
+            border-radius: 30px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .card h2 {
+            font-family: 'Staatliches', cursive;
+            font-size: 2.5rem;
+            color: var(--accent-gold);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1.2rem;
+            border-radius: 15px;
+            border: 2px solid var(--light-blue);
+            background: rgba(0, 31, 84, 0.8);
+            color: white;
+            margin-bottom: 2rem;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            font-family: 'Staatliches', cursive;
+            padding: 1rem 2.5rem;
+            font-size: 1.3rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(59, 157, 214, 0.5);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: 2px solid white;
+        }
+
+        /* Waiting Room */
+        .waiting-room .loading-animation {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        .players-list {
+            background: rgba(0, 31, 84, 0.6);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            min-height: 200px;
+        }
+
+        .player-card {
+            background: rgba(59, 157, 214, 0.3);
+            border: 2px solid var(--light-blue);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideInLeft 0.5s ease;
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .player-icon {
+            font-size: 2rem;
+        }
+
+        .player-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+        }
+
+        /* Module Selection */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .module-card {
+            background: rgba(0, 71, 171, 0.3);
+            backdrop-filter: blur(10px);
+            border: 3px solid var(--light-blue);
+            border-radius: 20px;
+            padding: 2.5rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(59, 157, 214, 0.2), rgba(255, 215, 0, 0.2));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .module-card:hover::before {
+            opacity: 1;
+        }
+
+        .module-card:hover {
+            transform: translateY(-10px) rotate(1deg);
+            border-color: var(--accent-gold);
+            box-shadow: 0 20px 60px rgba(255, 215, 0, 0.4);
+        }
+
+        .module-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 10px var(--light-blue));
+        }
+
+        .module-card h3 {
+            font-family: 'Staatliches', cursive;
+            font-size: 2rem;
+            color: var(--accent-gold);
+            margin-bottom: 1rem;
+        }
+
+        /* Game Screen */
+        .game-container {
+            background: rgba(0, 71, 171, 0.3);
+            backdrop-filter: blur(10px);
+            border: 3px solid var(--light-blue);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .progress-bar {
+            background: rgba(0, 31, 84, 0.6);
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            border: 2px solid var(--light-blue);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--light-blue), var(--accent-gold));
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Staatliches', cursive;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .question-card {
+            background: rgba(0, 31, 84, 0.6);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid var(--light-blue);
+        }
+
+        .question-card h3 {
+            font-family: 'Staatliches', cursive;
+            font-size: 1.8rem;
+            color: var(--accent-gold);
+            margin-bottom: 1.5rem;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            line-height: 1.7;
+            margin-bottom: 2rem;
+            color: white;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option-btn {
+            background: rgba(59, 157, 214, 0.3);
+            border: 2px solid var(--light-blue);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: left;
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(59, 157, 214, 0.5);
+            border-color: var(--accent-gold);
+            transform: translateX(10px);
+        }
+
+        .option-btn.correct {
+            background: rgba(16, 185, 129, 0.4);
+            border-color: #10b981;
+            animation: correctPulse 0.5s ease;
+        }
+
+        .option-btn.incorrect {
+            background: rgba(239, 68, 68, 0.4);
+            border-color: #ef4444;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .feedback {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback.correct {
+            background: rgba(16, 185, 129, 0.2);
+            border: 2px solid #10b981;
+            color: #6ee7b7;
+        }
+
+        .feedback.incorrect {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid #ef4444;
+            color: #fca5a5;
+        }
+
+        /* Results Screen */
+        .results-screen .celebration {
+            text-align: center;
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .score-number {
+            font-family: 'Staatliches', cursive;
+            font-size: 6rem;
+            background: linear-gradient(135deg, var(--accent-gold), #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: rgba(59, 157, 214, 0.3);
+            border: 2px solid var(--light-blue);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Staatliches', cursive;
+            font-size: 2.5rem;
+            color: var(--accent-gold);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .main-title { font-size: 3rem; }
+            .samuel-logo { max-width: 90%; }
+            .modules-grid { grid-template-columns: 1fr; }
+            .btn { padding: 0.8rem 2rem; font-size: 1.2rem; }
+            .music-control { top: 10px; right: 10px; padding: 10px 15px; }
+            .volume-slider { width: 60px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Video de Intro -->
+    <div class="video-intro" id="videoIntro">
+        <div class="video-loading" id="videoLoading">
+            <div class="spinner">✈️</div>
+            <p>Cargando video...</p>
+        </div>
+        <video id="introVideo" preload="auto" playsinline webkit-playsinline>
+            <source src="./imagenes/video de la candidatura.mp4" type="video/mp4">
+            <source src="./imagenes/video de la candidatura.webm" type="video/webm">
+            Tu navegador no soporta el elemento de video.
+        </video>
+        <button class="skip-video" onclick="skipVideo()">SALTAR INTRO ⏭️</button>
+    </div>
+
+    <!-- Background Animado -->
+    <div class="animated-bg">
+        <div class="plane">✈️</div>
+        <div class="plane">✈️</div>
+        <div class="plane">✈️</div>
+        <div class="plane">✈️</div>
+        <div class="heart-float" style="top: 20%; left: 10%;">❤️</div>
+        <div class="heart-float" style="top: 60%; left: 80%; animation-delay: 2s;">❤️</div>
+        <div class="heart-float" style="top: 40%; left: 50%; animation-delay: 4s;">❤️</div>
+    </div>
+
+    <!-- Controles de Música -->
+    <div class="music-control" id="musicControl" style="display: none;">
+        <button class="music-toggle" id="musicToggle" onclick="toggleMusic()">🎵</button>
+        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="70" oninput="changeVolume(this.value)">
+        <span id="volumeLabel">70%</span>
+    </div>
+
+    <!-- Audio de Fondo -->
+    <audio id="backgroundMusic" loop>
+        <source src="https://www.youtube.com/watch?v=83_UnqjGRJs" type="audio/mpeg">
+    </audio>
+
+    <div class="container">
+        <!-- Landing Screen -->
+        <div class="screen landing-screen active" id="landingScreen">
+            <div class="samuel-banner">
+                <img src="./imagenes/samuelsga.jpeg" alt="SAMUEL Logo" class="samuel-logo">
+                <div class="banner-subtitle">SGA MINUME XVII</div>
+                <div class="banner-tagline">
+                    <span>✈️</span>
+                    <span>MINUME QUE TRASCIENDE FRONTERAS</span>
+                    <span>❤️</span>
+                </div>
+            </div>
+            
+            <h1 class="main-title">
+                ACADEMIA DE<br>DIPLOMÁTICOS
+            </h1>
+            <p class="subtitle">
+                Prepárate para una experiencia diplomática épica donde la oratoria se fusiona con el poder<br>
+                y la negociación con la estrategia 🚀
+            </p>
+            <button class="start-btn" onclick="showMusicIntro()">
+                DESPEGAR AHORA
+            </button>
+        </div>
+
+        <!-- Music Intro -->
+        <div class="screen music-intro" id="musicIntro">
+            <div class="music-card">
+                <div class="vinyl-record">🎵</div>
+                <h2>¿QUIERES BAILAR AL RITMO DE...</h2>
+                <h3 style="font-size: 2rem; color: var(--light-blue); margin-bottom: 2rem;">
+                    🌍 MINUME QUE TRASCIENDE FRONTERAS? 🌍
+                </h3>
+                <p style="font-size: 1.3rem; margin-bottom: 2rem;">
+                    Prepárate para una experiencia diplomática como ninguna otra.
+                    Donde la oratoria se fusiona con el swag y la negociación con el flow.
+                </p>
+                <div class="rhythm-selector">
+                    <h4 style="color: var(--accent-gold); margin-bottom: 1rem; font-size: 1.5rem;">
+                        Elige tu ritmo de batalla:
+                    </h4>
+                    <button class="rhythm-btn" onclick="selectRhythm('diplomatic')">
+                        🎩 Diplomático Clásico - Para los puristas
+                    </button>
+                    <button class="rhythm-btn" onclick="selectRhythm('reggaeton')">
+                        🔥 Reggaeton Político - Dale con todo perro
+                    </button>
+                    <button class="rhythm-btn" onclick="selectRhythm('hiphop')">
+                        🎤 Hip-Hop Parlamentario - Bars diplomáticos
+                    </button>
+                    <button class="rhythm-btn" onclick="selectRhythm('bachata')">
+                        💃 Bachata de Consenso - Suave pero efectivo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multiplayer Entry -->
+        <div class="screen multiplayer-entry" id="multiplayerEntry">
+            <div class="card">
+                <h2>¿Cómo te llaman en las calles... digo, en la ONU?</h2>
+                <p style="text-align: center; margin: 1.5rem 0; color: var(--sky-blue);">
+                    Ingresa tu nombre de delegado:
+                </p>
+                <input type="text" id="playerNameInput" class="input-field" placeholder="Ej: El Tigre Diplomático">
+                
+                <div style="margin: 2rem 0;">
+                    <p style="text-align: center; color: var(--sky-blue); margin-bottom: 1rem;">
+                        Modo de juego:
+                    </p>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="startSolo()">
+                            🎯 SOLO - Yo contra el mundo
+                        </button>
+                        <button class="btn btn-secondary" onclick="startMultiplayer()">
+                            👥 MULTIJUGADOR - Con el crew
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Waiting Room -->
+        <div class="screen waiting-room" id="waitingRoom">
+            <div class="card">
+                <div class="loading-animation" style="text-align: center;">⏳</div>
+                <h2>🎮 SALA DE ESPERA VIP 🎮</h2>
+                <p style="text-align: center; font-size: 1.2rem; color: var(--sky-blue); margin: 1.5rem 0;">
+                    Esperando a que más delegados se unan a la batalla...
+                </p>
+                
+                <div class="players-list" id="playersList">
+                    <h3 style="color: var(--accent-gold); margin-bottom: 1rem;">Delegados en la sala:</h3>
+                    <div id="playersContainer"></div>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <p style="color: var(--sky-blue); margin-bottom: 1rem;">
+                        Jugadores necesarios: <span id="playerCount">1</span>/3 mínimo
+                    </p>
+                    <button class="btn btn-success" id="startGameBtn" onclick="startFromWaitingRoom()" disabled style="opacity: 0.5;">
+                        🚀 COMENZAR BATALLA
+                    </button>
+                    <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 1rem;">
+                        (O espera a que lleguen más players para la experiencia completa)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module Selection -->
+        <div class="screen module-selection" id="moduleSelection">
+            <div class="samuel-banner">
+                <img src="./imagenes/samuelsga.jpeg" alt="SAMUEL Logo" class="samuel-logo">
+            </div>
+            <h2 style="font-family: 'Staatliches', cursive; font-size: 3rem; text-align: center; color: var(--accent-gold); margin-bottom: 2rem;">
+                ELIGE TU MISIÓN
+            </h2>
+            <div class="modules-grid">
+                <div class="module-card" onclick="selectModule('oratoria')">
+                    <div class="module-icon">🎤</div>
+                    <h3>Taller de Oratoria</h3>
+                    <p>
+                        Domina el arte de hablar en público, estructura tus argumentos con claridad 
+                        y aprende técnicas para cautivar a tu audiencia en la Asamblea General.
+                    </p>
+                </div>
+
+                <div class="module-card" onclick="selectModule('negociacion')">
+                    <div class="module-icon">🤝</div>
+                    <h3>Taller de Negociación</h3>
+                    <p>
+                        Desarrolla estrategias diplomáticas efectivas, aprende a construir consensos 
+                        y domina las tácticas para alcanzar acuerdos beneficiosos para todas las partes.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="screen game-screen" id="gameScreen">
+            <div class="game-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar" style="width: 0%">
+                        <span id="progressText">0%</span>
+                    </div>
+                </div>
+
+                <div class="question-card" id="questionCard">
+                    <h3>Pregunta <span id="questionNumber">1</span> de <span id="totalQuestions">8</span></h3>
+                    <p class="question-text" id="questionText"></p>
+                    
+                    <div class="options-grid" id="optionsContainer"></div>
+                    
+                    <div class="feedback" id="feedback"></div>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="btn btn-secondary" id="nextBtn" style="display: none;" onclick="nextQuestion()">
+                        SIGUIENTE PREGUNTA →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div class="screen results-screen" id="resultsScreen">
+            <div class="game-container" style="text-align: center;">
+                <div class="celebration" id="celebrationEmoji">🎉</div>
+                <h2 style="font-family: 'Staatliches', cursive; font-size: 3rem; color: var(--accent-gold); margin-bottom: 1rem;">
+                    ¡Misión Completada!
+                </h2>
+                
+                <div class="score-display">
+                    <div class="score-number" id="finalScore">0</div>
+                    <p style="font-size: 1.5rem; color: var(--sky-blue);">Puntos Obtenidos</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div style="color: var(--sky-blue); margin-bottom: 0.5rem;">Respuestas Correctas</div>
+                        <div class="stat-value" id="correctAnswers">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="color: var(--sky-blue); margin-bottom: 0.5rem;">Respuestas Incorrectas</div>
+                        <div class="stat-value" id="incorrectAnswers">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="color: var(--sky-blue); margin-bottom: 0.5rem;">Porcentaje</div>
+                        <div class="stat-value"><span id="percentage">0</span>%</div>
+                    </div>
+                </div>
+
+                <div style="margin: 2rem 0; padding: 1.5rem; background: rgba(59, 157, 214, 0.3); border-radius: 15px; border: 2px solid var(--light-blue);">
+                    <h3 style="color: var(--accent-gold); margin-bottom: 1rem;" id="evaluationTitle">Evaluación</h3>
+                    <p style="font-size: 1.2rem; line-height: 1.6;" id="evaluationText"></p>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="returnToModules()">
+                        🔄 OTRO TALLER
+                    </button>
+                    <button class="btn btn-success" onclick="restartModule()">
+                        🎯 REINTENTAR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let players = [];
+        let isMultiplayer = false;
+        let playerName = '';
+        let selectedRhythm = '';
+        let audioRecorder = null;
+        let audioChunks = [];
+        let backgroundMusic = null;
+        let isMusicPlaying = false;
+        let currentModule = '';
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let correctCount = 0;
+        let incorrectCount = 0;
+
+        // Preguntas de la base de datos
+        const questionsDB = {
+            oratoria: [
+                {
+                    question: "Estás en el podio y la wifi se cayó justo cuando ibas a mostrar tus slides. Los delegados de Rusia y China se ríen. ¿Qué haces?",
+                    options: [
+                        "Entras en pánico y pides un receso técnico de 20 minutos",
+                        "Sonríes y dices: 'Parece que incluso la tecnología necesita un momento diplomático. Continuemos sin ella, al estilo clásico'",
+                        "Te quedas en silencio esperando que alguien arregle el problema",
+                        "Empiezas a leer tus notas textualmente sin mirar a nadie"
+                    ],
+                    correct: 1,
+                    explanation: "¡BOOM! El humor y la improvisación te salvan. Los mejores oradores convierten los errores en momentos memorables. Mostraste confianza y carisma bajo presión."
+                },
+                {
+                    question: "Tu crush está sentado en primera fila durante tu discurso y no puedes dejar de mirarlo/a. Los demás delegados lo notan. ¿Cómo lo manejas?",
+                    options: [
+                        "Sigues mirándolo/a, total ya te descubrieron",
+                        "Distribuyes estratégicamente tu contacto visual por TODA la sala, incluyendo a tu crush pero sin obviar a nadie",
+                        "Evitas mirarlo/a completamente para no distraerte",
+                        "Le guiñas un ojo y sigues con tu discurso"
+                    ],
+                    correct: 1,
+                    explanation: "¡Profesionalismo al 100! El contacto visual equilibrado es clave. Puedes incluir a tu crush sin que sea obvio. Los grandes oradores hacen que TODOS se sientan importantes."
+                },
+                {
+                    question: "El delegado de Francia acaba de soltar un argumento BRUTAL que destruyó tu punto principal. Toda la sala está esperando tu respuesta. ¿Qué haces?",
+                    options: [
+                        "Finges que no escuchaste y continúas con tu speech original",
+                        "Tomas 3 segundos de pausa, respiras, y dices: 'Punto interesante. Sin embargo, consideremos esto desde otra perspectiva...' y reformulas tu argumento",
+                        "Atacas personalmente al delegado francés",
+                        "Admites la derrota y te sientas"
+                    ],
+                    correct: 1,
+                    explanation: "¡CLUTCH! La pausa te da tiempo para pensar. Reconocer el argumento enemigo y LUEGO contra-argumentar te hace ver maduro y estratégico. Nunca ignores lo obvio."
+                },
+                {
+                    question: "🎤 DESAFÍO DE DISCURSO: Tienes 30 segundos para preparar un discurso sobre 'Por qué mi país merece un asiento permanente en el Consejo de Seguridad'. Cuando estés listo, graba tu discurso:",
+                    options: [
+                        "🎙️ GRABAR MI DISCURSO (30-60 segundos)",
+                        "🔄 Necesito más tiempo para preparar",
+                        "📝 Prefiero escribirlo primero",
+                        "⏭️ Saltar este desafío"
+                    ],
+                    correct: 0,
+                    explanation: "¡La práctica hace al maestro! Grabarte te permite escuchar tu tono, ritmo y confianza. Los grandes oradores practican en voz alta, no solo en su mente. ¡Atrévete!"
+                },
+                {
+                    question: "Tu teléfono suena EN MEDIO de tu discurso. Es la canción más vergonzosa de tu playlist. ¿Qué haces?",
+                    options: [
+                        "Finges que no es tuyo y sigues hablando más alto",
+                        "Pausas, dices 'Disculpen, incluso los diplomáticos tenemos guilty pleasures', lo apagas y continúas con una sonrisa",
+                        "Sales corriendo de la sala",
+                        "Lo ignoras completamente hasta que pare de sonar"
+                    ],
+                    correct: 1,
+                    explanation: "¡HUMANIDAD AL 100! Reconocer el error con humor te hace ver auténtico y seguro. Los delegados respetan más a alguien real que a alguien que finge perfección."
+                },
+                {
+                    question: "Estás dando un speech y te das cuenta que tienes espinaca en los dientes. Una delegada te hace señas discretas. ¿Qué haces?",
+                    options: [
+                        "Ignoras las señas y continúas como si nada",
+                        "Te limpias discretamente con la lengua mientras hablas",
+                        "Haces una pausa breve, dices 'Un momento diplomático' y te arreglas rápido",
+                        "Terminas el speech completo con la espinaca"
+                    ],
+                    correct: 2,
+                    explanation: "¡Pro move! Una micro-pausa para arreglarte es mejor que 5 minutos hablando con espinaca. Muestra autoconciencia y que valoras tu imagen profesional."
+                },
+                {
+                    question: "Vas a dar tu discurso pero acabas de ver que tu ex entró a la sala con su nueva pareja. ¿Cómo manejas la presión?",
+                    options: [
+                        "Cancelas tu participación, no puedes concentrarte",
+                        "Convierte esa energía en fuego: das el MEJOR discurso de tu vida para demostrar que estás mejor que nunca",
+                        "Los miras fijamente durante todo tu speech para incomodarlos",
+                        "Pides cambiar tu turno para el final"
+                    ],
+                    correct: 1,
+                    explanation: "¡SAVAGE DIPLOMÁTICO! Usa esa adrenalina a tu favor. Nada dice 'estoy increíble' como un speech que deja a todos con la boca abierta. ¡Demuéstralo en el podio!"
+                },
+                {
+                    question: "Un delegado dormido ronca durante tu discurso. Varios se ríen. ¿Cuál es tu move?",
+                    options: [
+                        "Te ofendes y te quejas con el presidente",
+                        "Haces una pausa, sonríes y dices: 'Parece que mi colega está soñando con un mundo mejor. Despertémoslo con ideas que valen la pena', y continúas con más energía",
+                        "Gritas más fuerte para despertarlo",
+                        "Lo ignoras totalmente"
+                    ],
+                    correct: 1,
+                    explanation: "¡CLUTCH MÁXIMO! Convertir un momento incómodo en un one-liner memorable es nivel ÉLITE. Mostraste ingenio, control y carisma. Eso es liderazgo real."
+                }
+            ],
+            negociacion: [
+                {
+                    question: "Estás negociando con el delegado de UK. Te ofrece su apoyo a cambio de que votes contra tu mejor amigo en otra resolución. ¿Qué haces?",
+                    options: [
+                        "Aceptas. Business is business, bro",
+                        "Rechazas de una vez. Los hermanos no se traicionan",
+                        "Le dices: 'Déjame buscar una alternativa que funcione para ambos sin sacrificar a nadie' y negociar una tercera opción",
+                        "Finges aceptar pero luego haces lo que quieras"
+                    ],
+                    correct: 2,
+                    explanation: "¡DIPLOMACIA REAL! Los mejores negociadores expanden el pastel en vez de pelearse por las migajas. Hay casi siempre una tercera opción que no habías considerado. ¡Busca el win-win-win!"
+                },
+                {
+                    question: "Te enteras que otros delegados hicieron un grupo de WhatsApp para negociar SIN TI. ¿Cómo lo manejas?",
+                    options: [
+                        "Los confrontas públicamente y los acusas de conspiración",
+                        "Te haces la víctima y te quejas con todos",
+                        "Creas TU propio grupo mejor, con delegados más influyentes",
+                        "Te acercas individualmente a los miembros clave, construyes relaciones 1-a-1 y eventualmente te incluyen o formas algo mejor"
+                    ],
+                    correct: 3,
+                    explanation: "¡ESTRATEGIA MAESTRA! El drama público solo te hace ver débil. Las relaciones 1-a-1 son más poderosas que cualquier grupo. Enfócate en construir puentes, no en llorar."
+                },
+                {
+                    question: "Necesitas el voto de China pero ellos quieren algo a cambio que NO puedes dar. ¿Cuál es tu jugada?",
+                    options: [
+                        "Mientes y prometes algo que no cumplirás",
+                        "Te rindes y buscas otros votos",
+                        "Exploras QUÉ necesitan REALMENTE y ofreces satisfacer esa necesidad de OTRA forma creativa",
+                        "Los amenazas con vetar sus resoluciones futuras"
+                    ],
+                    correct: 2,
+                    explanation: "¡PRO GAMER MOVE! Casi nunca la primera demanda es lo que REALMENTE necesitan. Pregunta '¿Por qué necesitas esto?' hasta llegar a la raíz. Ahí está la solución mágica."
+                },
+                {
+                    question: "Dos aliados tuyos están peleados entre sí y te piden que elijas un lado. Si eliges mal, pierdes uno. ¿Qué haces?",
+                    options: [
+                        "Eliges al más poderoso para estar del lado ganador",
+                        "No eliges ninguno y te mantienes neutral",
+                        "Intentas mediar entre ellos y encontrar un compromiso que los reconcilie",
+                        "Te alejas de ambos para evitar el drama"
+                    ],
+                    correct: 2,
+                    explanation: "¡PEACEMAKER! Si logras mediar exitosamente, AMBOS te deben una. Eso te hace el power broker. Los mejores diplomáticos construyen puentes, no eligen bandos."
+                },
+                {
+                    question: "Estás a punto de cerrar un trato PERFECTO cuando alguien filtra información confidencial que cambia todo. ¿Qué haces?",
+                    options: [
+                        "Cancelar todo inmediatamente por falta de confianza",
+                        "Investigar quién filtró y vengarte",
+                        "Adaptar la estrategia a la nueva realidad y ser transparente con todos los involucrados",
+                        "Fingir que no pasó nada y seguir como si nada"
+                    ],
+                    correct: 2,
+                    explanation: "¡ADAPTABILIDAD! En diplomacia las cosas cambian. Los planes perfectos son raros. La transparencia después de una filtración te hace ver honesto y reconstruye confianza más rápido."
+                },
+                {
+                    question: "Un país pequeño pero clave tiene el voto decisivo. Todos los grandes lo están presionando. ¿Cómo lo convences?",
+                    options: [
+                        "Le ofreces más dinero/beneficios que los demás",
+                        "Lo presionas con amenazas diplomáticas sutiles",
+                        "Le muestras respeto genuino, escuchas SUS preocupaciones y construyes una relación real, no transaccional",
+                        "Lo ignoras y buscas otro voto"
+                    ],
+                    correct: 2,
+                    explanation: "¡RESPETO REAL! Los países pequeños están CANSADOS de ser tratados como peones. Quien los trate como iguales gana su lealtad. Las relaciones vencen a las transacciones siempre."
+                },
+                {
+                    question: "Te ofrecen un súper acuerdo pero tu delegación en casa está dividida 50-50. ¿Qué haces?",
+                    options: [
+                        "Lo aceptas solo y luego convences a tu equipo",
+                        "Lo rechazas para no arriesgar división interna",
+                        "Pides tiempo para consensuar con tu equipo primero, aunque pierdas momentum",
+                        "Aceptas condicionalmente hasta tener luz verde interna"
+                    ],
+                    correct: 3,
+                    explanation: "¡SMART! Un 'sí condicional' mantiene viva la negociación mientras te cubres internamente. Es el balance perfecto entre oportunidad y responsabilidad. ¡Eso es negociar con cerebro!"
+                },
+                {
+                    question: "ÚLTIMA RONDA: Están a 5 minutos del cierre y te falta UN voto para aprobar algo crucial. ¿Qué haces?",
+                    options: [
+                        "Entras en modo pánico y ruegas por el voto",
+                        "Aceptas la derrota con dignidad",
+                        "Vas directo al delegado indeciso, lo miras a los ojos y haces tu pitch MÁS apasionado y conciso de 60 segundos",
+                        "Intentas manipular el reloj para tener más tiempo"
+                    ],
+                    correct: 2,
+                    explanation: "¡CLUTCH MOMENT! Bajo presión es cuando se ven los verdaderos negociadores. Un pitch de 60 segundos con contacto visual, pasión genuina y claridad puede cambiar la historia. ¡CREER ES PODER!"
+                }
+            ]
+        };
+
+        // Inicialización
+        window.onload = function() {
+            const video = document.getElementById('introVideo');
+            const videoLoading = document.getElementById('videoLoading');
+            
+            // Mostrar loading mientras carga
+            video.style.display = 'none';
+            
+            // Manejar cuando el video está listo para reproducir
+            video.addEventListener('canplaythrough', function() {
+                console.log('Video listo para reproducir');
+                videoLoading.classList.add('hidden');
+                video.style.display = 'block';
+                
+                // Intentar reproducir
+                const playPromise = video.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log('Video reproduciéndose');
+                        video.muted = false; // Activar sonido después de iniciar
+                    }).catch(error => {
+                        console.log('Error al reproducir:', error);
+                        // Si falla el autoplay, mostrar botón de play
+                        showPlayButton();
+                    });
+                }
+            });
+            
+            // Manejar errores de carga
+            video.addEventListener('error', function(e) {
+                console.error('Error al cargar el video:', e);
+                videoLoading.innerHTML = `
+                    <div class="spinner">⚠️</div>
+                    <p>Error al cargar el video</p>
+                    <button class="btn btn-primary" onclick="skipVideo()" style="margin-top: 1rem;">
+                        CONTINUAR SIN VIDEO
+                    </button>
+                `;
+            });
+            
+            // Manejar cuando se está buffering
+            video.addEventListener('waiting', function() {
+                console.log('Video buffering...');
+                videoLoading.classList.remove('hidden');
+            });
+            
+            video.addEventListener('playing', function() {
+                console.log('Video playing');
+                videoLoading.classList.add('hidden');
+            });
+            
+            // Cuando termina el video
+            video.addEventListener('ended', function() {
+                skipVideo();
+            });
+            
+            // Forzar carga del video
+            video.load();
+        };
+
+        function showPlayButton() {
+            const videoLoading = document.getElementById('videoLoading');
+            videoLoading.classList.remove('hidden');
+            videoLoading.innerHTML = `
+                <div class="spinner">▶️</div>
+                <p>Haz clic para reproducir</p>
+                <button class="btn btn-primary" onclick="playVideoManually()" style="margin-top: 1rem;">
+                    ▶️ REPRODUCIR VIDEO
+                </button>
+            `;
+        }
+
+        function playVideoManually() {
+            const video = document.getElementById('introVideo');
+            const videoLoading = document.getElementById('videoLoading');
+            
+            video.muted = false;
+            video.play().then(() => {
+                videoLoading.classList.add('hidden');
+            }).catch(error => {
+                console.error('No se pudo reproducir:', error);
+                skipVideo();
+            });
+        }
+
+        function skipVideo() {
+            document.getElementById('videoIntro').classList.add('hidden');
+            document.getElementById('musicControl').style.display = 'flex';
+            initMusic();
+        }
+
+        // Auto-skip si el video tarda más de 10 segundos en cargar
+        setTimeout(() => {
+            const video = document.getElementById('introVideo');
+            const videoLoading = document.getElementById('videoLoading');
+            
+            if (!video.played.length && !videoLoading.classList.contains('hidden')) {
+                console.log('Video tardando mucho, ofreciendo opción de saltar');
+                videoLoading.innerHTML = `
+                    <div class="spinner">⏰</div>
+                    <p>El video está tardando en cargar...</p>
+                    <button class="btn btn-primary" onclick="skipVideo()" style="margin-top: 1rem;">
+                        CONTINUAR SIN VIDEO
+                    </button>
+                    <p style="font-size: 0.9rem; margin-top: 1rem; opacity: 0.7;">
+                        Esto puede deberse a una conexión lenta o un archivo muy pesado
+                    </p>
+                `;
+            }
+        }, 10000);
+
+        function initMusic() {
+            // Usar iframe de YouTube para la música de fondo
+            const musicHTML = `
+                <iframe id="youtubeMusic" width="0" height="0" 
+                    src="https://www.youtube.com/embed/83_UnqjGRJs?autoplay=1&loop=1&playlist=83_UnqjGRJs&controls=0" 
+                    frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="display:none;">
+                </iframe>
+            `;
+            document.body.insertAdjacentHTML('beforeend', musicHTML);
+            isMusicPlaying = true;
+        }
+
+        function toggleMusic() {
+            const iframe = document.getElementById('youtubeMusic');
+            const toggle = document.getElementById('musicToggle');
+            
+            if (isMusicPlaying) {
+                if (iframe) iframe.remove();
+                toggle.textContent = '🔇';
+                isMusicPlaying = false;
+            } else {
+                initMusic();
+                toggle.textContent = '🎵';
+                isMusicPlaying = true;
+            }
+        }
+
+        function changeVolume(value) {
+            document.getElementById('volumeLabel').textContent = value + '%';
+            // YouTube iframe no permite control de volumen fácilmente
+            // Pero mostramos el valor para el usuario
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showMusicIntro() {
+            showScreen('musicIntro');
+        }
+
+        function selectRhythm(rhythm) {
+            selectedRhythm = rhythm;
+            
+            document.querySelectorAll('.rhythm-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+
+            setTimeout(() => {
+                showScreen('multiplayerEntry');
+            }, 800);
+        }
+
+        function startSolo() {
+            const nameInput = document.getElementById('playerNameInput').value.trim();
+            if (!nameInput) {
+                alert('¡Oye! Necesitas un nombre, aunque sea "El Anónimo" 😎');
+                return;
+            }
+            
+            playerName = nameInput;
+            isMultiplayer = false;
+            showScreen('moduleSelection');
+        }
+
+        function startMultiplayer() {
+            const nameInput = document.getElementById('playerNameInput').value.trim();
+            if (!nameInput) {
+                alert('¡Ponle nombre a tu personaje, campeón! 🎮');
+                return;
+            }
+            
+            playerName = nameInput;
+            isMultiplayer = true;
+            
+            players.push({
+                name: playerName,
+                status: '✓ Listo para la batalla',
+                icon: '👤'
+            });
+
+            simulatePlayersJoining();
+            showScreen('waitingRoom');
+            updatePlayersList();
+        }
+
+        function simulatePlayersJoining() {
+            const fakeNames = [
+                { name: 'El Negociador Pro', icon: '🕴️' },
+                { name: 'La Reina del Debate', icon: '👑' },
+                { name: 'Capitán Consenso', icon: '🦸' },
+                { name: 'Diplomatic Beast', icon: '🐉' }
+            ];
+
+            let joinCount = 0;
+            const interval = setInterval(() => {
+                if (joinCount < 2) {
+                    const randomPlayer = fakeNames[Math.floor(Math.random() * fakeNames.length)];
+                    players.push({
+                        ...randomPlayer,
+                        status: '✓ Conectado'
+                    });
+                    updatePlayersList();
+                    joinCount++;
+                } else {
+                    clearInterval(interval);
+                    document.getElementById('startGameBtn').disabled = false;
+                    document.getElementById('startGameBtn').style.opacity = '1';
+                }
+            }, 2000);
+        }
+
+        function updatePlayersList() {
+            const container = document.getElementById('playersContainer');
+            container.innerHTML = '';
+            
+            players.forEach((player, index) => {
+                const card = document.createElement('div');
+                card.className = 'player-card';
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.innerHTML = `
+                    <div class="player-icon">${player.icon}</div>
+                    <div style="flex: 1;">
+                        <div class="player-name">${player.name}</div>
+                        <div style="font-size: 0.9rem; color: #94a3b8;">${player.status}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('playerCount').textContent = players.length;
+        }
+
+        function startFromWaitingRoom() {
+            showScreen('moduleSelection');
+        }
+
+        function selectModule(module) {
+            currentModule = module;
+            currentQuestions = shuffleArray([...questionsDB[module]]);
+            currentQuestionIndex = 0;
+            score = 0;
+            correctCount = 0;
+            incorrectCount = 0;
+
+            showScreen('gameScreen');
+            loadQuestion();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function loadQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+            const progress = ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
+
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = Math.round(progress) + '%';
+            document.getElementById('questionNumber').textContent = currentQuestionIndex + 1;
+            document.getElementById('totalQuestions').textContent = currentQuestions.length;
+            document.getElementById('questionText').textContent = question.question;
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            question.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.onclick = () => selectAnswer(index);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('feedback').classList.remove('show', 'correct', 'incorrect');
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        function selectAnswer(selectedIndex) {
+            const question = currentQuestions[currentQuestionIndex];
+            const options = document.querySelectorAll('.option-btn');
+            const feedback = document.getElementById('feedback');
+
+            // Manejo especial para el desafío de grabación
+            if (question.question.includes('DESAFÍO DE DISCURSO') && selectedIndex === 0) {
+                options.forEach(btn => btn.disabled = true);
+                startRecording();
+                return;
+            }
+
+            options.forEach(btn => btn.disabled = true);
+
+            if (selectedIndex === question.correct) {
+                options[selectedIndex].classList.add('correct');
+                feedback.className = 'feedback show correct';
+                feedback.innerHTML = `<strong>¡Excelente! ✓</strong><br>${question.explanation}`;
+                score += 100;
+                correctCount++;
+            } else {
+                options[selectedIndex].classList.add('incorrect');
+                options[question.correct].classList.add('correct');
+                feedback.className = 'feedback show incorrect';
+                feedback.innerHTML = `<strong>Incorrecto ✗</strong><br>${question.explanation}`;
+                incorrectCount++;
+            }
+
+            document.getElementById('nextBtn').style.display = 'inline-block';
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                audioRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                audioRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    
+                    const feedback = document.getElementById('feedback');
+                    feedback.className = 'feedback show correct';
+                    feedback.innerHTML = `
+                        <strong>¡Discurso grabado! 🎤</strong><br>
+                        <audio controls src="${audioUrl}" style="width: 100%; margin-top: 1rem;"></audio><br>
+                        <p style="margin-top: 1rem;">¡Bien hecho! Ahora escúchate y evalúa: ¿Sonaste seguro? ¿Tu ritmo fue bueno? La autocrítica es clave.</p>
+                    `;
+                    
+                    document.getElementById('nextBtn').style.display = 'inline-block';
+                    score += 100;
+                    correctCount++;
+                };
+
+                audioRecorder.start();
+                
+                setTimeout(() => {
+                    if (audioRecorder && audioRecorder.state === 'recording') {
+                        audioRecorder.stop();
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                }, 60000);
+
+                const feedback = document.getElementById('feedback');
+                feedback.className = 'feedback show';
+                feedback.style.background = 'rgba(239, 68, 68, 0.2)';
+                feedback.style.borderColor = '#ef4444';
+                feedback.innerHTML = `
+                    <strong>🔴 GRABANDO...</strong><br>
+                    <p>Tienes 60 segundos. ¡Dale con todo!</p>
+                    <button class="btn btn-primary" onclick="stopRecording()" style="margin-top: 1rem; padding: 0.5rem 2rem;">
+                        ⏹️ DETENER GRABACIÓN
+                    </button>
+                `;
+
+            } catch (error) {
+                const feedback = document.getElementById('feedback');
+                feedback.className = 'feedback show incorrect';
+                feedback.innerHTML = `
+                    <strong>No se pudo acceder al micrófono</strong><br>
+                    <p>No hay rollo, puedes saltar este desafío o intentar de nuevo después de permitir el acceso.</p>
+                `;
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            }
+        }
+
+        function stopRecording() {
+            if (audioRecorder && audioRecorder.state === 'recording') {
+                audioRecorder.stop();
+                audioRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            showScreen('resultsScreen');
+
+            const percentage = Math.round((correctCount / currentQuestions.length) * 100);
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('correctAnswers').textContent = correctCount;
+            document.getElementById('incorrectAnswers').textContent = incorrectCount;
+            document.getElementById('percentage').textContent = percentage;
+
+            let evaluation = '';
+            let emoji = '🎉';
+
+            if (percentage >= 90) {
+                emoji = '🏆';
+                evaluation = '¡DIPLOMÁTICO EXCEPCIONAL! Has demostrado un dominio sobresaliente de las habilidades requeridas. Estás listo para liderar delegaciones en escenarios internacionales complejos.';
+            } else if (percentage >= 75) {
+                emoji = '🌟';
+                evaluation = '¡MUY BIEN! Tienes una sólida comprensión de los principios fundamentales. Con un poco más de práctica, alcanzarás la excelencia diplomática.';
+            } else if (percentage >= 60) {
+                emoji = '👍';
+                evaluation = 'BUEN TRABAJO. Has captado conceptos importantes, pero hay áreas que requieren mayor profundización. Continúa practicando y refinando tus habilidades.';
+            } else {
+                emoji = '📚';
+                evaluation = 'NECESITAS MÁS PRÁCTICA. La diplomacia es un arte que se perfecciona con el tiempo. Revisa los conceptos y vuelve a intentarlo. ¡No te rindas!';
+            }
+
+            document.getElementById('celebrationEmoji').textContent = emoji;
+            document.getElementById('evaluationText').textContent = evaluation;
+        }
+
+        function returnToModules() {
+            showScreen('moduleSelection');
+        }
+
+        function restartModule() {
+            selectModule(currentModule);
+        }
+    </script>
+</body>
+</html>
