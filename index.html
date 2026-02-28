@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DELEGAME">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#F0C040">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./imagenes/logofinal.jpeg">
+<link rel="icon" type="image/jpeg" href="./imagenes/logofinal.jpeg">
 <title>DELEGAME · Academia Diplomática</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -1066,7 +1073,7 @@ select.f-input{appearance:none;cursor:pointer}
   </div>
   <div class="mode-grid">
     <div class="mode-card" onclick="G.go('sRegister',{mode:'solo'})">
-      <div class="mode-icon"></div>
+      <div class="mode-icon">🎯</div>
       <div class="mode-title">Vuelo Solo</div>
       <p class="mode-desc">Entrena a tu ritmo como delegado individual. Sin límite de tiempo en sala.</p>
       <div class="btn-group"><span class="badge badge-blue">1 pasajero</span><span class="badge badge-gold">Sin sala</span></div>
@@ -1078,7 +1085,7 @@ select.f-input{appearance:none;cursor:pointer}
       <div class="btn-group"><span class="badge badge-dawn">Piloto</span><span class="badge badge-blue">Hasta 30</span></div>
     </div>
     <div class="mode-card" onclick="G.go('sJoin')">
-      <div class="mode-icon"></div>
+      <div class="mode-icon">🚀</div>
       <div class="mode-title">Unirse al Vuelo</div>
       <p class="mode-desc">¿Tienes el código de sala? Aborda como pasajero y compite en tiempo real.</p>
       <div class="btn-group"><span class="badge badge-gold">Código requerido</span></div>
@@ -2666,5 +2673,14 @@ const G = {
 // Init
 G._buildCountries();
 </script>
+  <script>
+    if('serviceWorker' in navigator){
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('DELEGAME PWA activa'))
+          .catch(e => console.warn('SW:', e));
+      });
+    }
+  </script>
 </body>
 </html>

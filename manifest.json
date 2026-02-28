@@ -1,0 +1,26 @@
+{
+  "name": "DELEGAME · Academia Diplomática",
+  "short_name": "DELEGAME",
+  "description": "Plataforma de entrenamiento diplomático — MINUME XVII",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#03112B",
+  "theme_color": "#F0C040",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "./imagenes/logofinal.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./imagenes/logofinal.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
