@@ -10,7 +10,6 @@
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <style>
 /* ============================================================  TOKENS  ============================================================ */
@@ -528,7 +527,7 @@ select.f-input{appearance:none;cursor:pointer}
 }
 .av-btn:hover{border-color:var(--gold);transform:scale(1.12);box-shadow:0 0 16px rgba(240,192,64,.3)}
 .av-btn.sel{border-color:var(--gold);border-width:3px;box-shadow:0 0 18px rgba(240,192,64,.55);transform:scale(1.18)}
-.av-btn img{image-rendering:pixelated;image-rendering:crisp-edges;display:block;width:100%;height:100%}
+.av-btn img{display:block;width:100%;height:100%;border-radius:50%}
 
 .av-pilot{border-color:rgba(255,107,53,.6)!important;background:rgba(255,107,53,.08)!important}
 .av-pilot.sel{border-color:var(--dawn)!important;box-shadow:0 0 18px rgba(255,107,53,.55)!important}
@@ -864,6 +863,7 @@ select.f-input{appearance:none;cursor:pointer}
 .role-piloto{background:rgba(255,107,53,.18);color:#FF6B35;border:1px solid rgba(255,107,53,.3)}
 .role-delegado{background:rgba(21,99,200,.2);color:#60A5FA;border:1px solid rgba(21,99,200,.3)}
 .role-admin{background:rgba(240,192,64,.15);color:var(--gold);border:1px solid rgba(240,192,64,.3)}
+.role-anfitrion{background:rgba(52,211,153,.12);color:#34D399;border:1px solid rgba(52,211,153,.25)}
 .admin-del-btn{
   background:none;border:1px solid rgba(239,68,68,.3);color:#F87171;
   border-radius:6px;padding:4px 10px;cursor:pointer;font-size:.75rem;
@@ -895,15 +895,15 @@ select.f-input{appearance:none;cursor:pointer}
 <div id="toasts"></div>
 
 <!-- Plane overlay (takeoff animation per question) -->
-<div id="planeOverlay"><div class="plane-anim">✈️</div></div>
+<div id="planeOverlay"><div class="plane-anim"></div></div>
 
 <!-- Arrival screen -->
 <div id="arrivalScreen">
-  <div class="arrival-plane">✈️</div>
+  <div class="arrival-plane"></div>
   <div class="arrival-sub">DELEGAME AIRLINES · VUELO DIPLOMÁTICO</div>
   <div class="arrival-title">¡HEMOS ATERRIZANDO!</div>
-  <div class="arrival-dest">🌐 DELEGAME</div>
-  <div class="arrival-sga" id="arrivalPlayerName">SAMUEL JIMÉNEZ · SGA</div>
+  <div class="arrival-dest">MINUME XVII · TRASCENDIENDO FRONTERAS</div>
+  <div class="arrival-sga" id="arrivalPlayerName"></div>
   <div style="margin-top:32px;" id="arrivalBtns"></div>
 </div>
 
@@ -982,7 +982,7 @@ select.f-input{appearance:none;cursor:pointer}
 <!-- ===== HEADER ===== -->
 <header id="hdr">
   <div class="hdr-brand">
-    <span class="hdr-plane">✈️</span>
+    <span class="hdr-plane"></span>
     DELEGAME
   </div>
   <div class="hdr-right">
@@ -1013,7 +1013,7 @@ select.f-input{appearance:none;cursor:pointer}
         class="home-logo-img-main"
         onerror="this.style.display='none';document.getElementById('homeLogoFallback').style.display='flex'">
       <div id="homeLogoFallback" class="home-logo-fallback" style="display:none">
-        <span style="font-size:2.5rem">✈️</span>
+        <span style="font-size:2.5rem"></span>
         <div>
           <div style="font-family:var(--f-head);font-size:1.2rem;color:var(--gold);letter-spacing:.12em">SAMUEL JIMÉNEZ</div>
           <div style="font-family:var(--f-mono);font-size:.65rem;color:var(--silver);letter-spacing:.2em;margin-top:4px">SECRETARIO GENERAL ACADÉMICO · DELEGAME</div>
@@ -1028,12 +1028,12 @@ select.f-input{appearance:none;cursor:pointer}
     </div>
 
     <div class="home-runway">
-      <div class="runway-plane">✈️</div>
+      <div class="runway-plane"></div>
     </div>
 
     <div class="home-tags">
       <span class="tag">🇩🇴 Rep. Dominicana</span>
-      <span class="tag">✈️ DELEGAME Airlines</span>
+      <span class="tag"> DELEGAME Airlines</span>
       <span class="tag">⚖ Derecho Internacional</span>
       <span class="tag">🌐 Multijugador Real</span>
     </div>
@@ -1046,12 +1046,12 @@ select.f-input{appearance:none;cursor:pointer}
       negociación y protocolo. Cada pregunta correcta te acerca más a DELEGAME.
     </p>
     <div class="home-cta">
-      <button class="btn btn-gold btn-lg" onclick="G.go('sModeSelect')">🛫 Abordar →</button>
+      <button class="btn btn-gold btn-lg" onclick="G.go('sModeSelect')">Abordar →</button>
       <button class="btn btn-ghost" onclick="G.go('sAdmin')">⚙ Admin Panel</button>
     </div>
     <div class="airport-grid">
       <div class="airport-cell"><div class="airport-code">SDQ</div><div class="airport-name">Punto de Partida</div></div>
-      <div class="airport-cell"><div class="airport-code">✈️</div><div class="airport-name">3 Módulos · 24 Preguntas</div></div>
+      <div class="airport-cell"><div class="airport-code"></div><div class="airport-name">3 Módulos · 24 Preguntas</div></div>
       <div class="airport-cell"><div class="airport-code">MUN</div><div class="airport-name">DELEGAME</div></div>
     </div>
   </div>
@@ -1066,19 +1066,19 @@ select.f-input{appearance:none;cursor:pointer}
   </div>
   <div class="mode-grid">
     <div class="mode-card" onclick="G.go('sRegister',{mode:'solo'})">
-      <div class="mode-icon">🎯</div>
+      <div class="mode-icon"></div>
       <div class="mode-title">Vuelo Solo</div>
       <p class="mode-desc">Entrena a tu ritmo como delegado individual. Sin límite de tiempo en sala.</p>
       <div class="btn-group"><span class="badge badge-blue">1 pasajero</span><span class="badge badge-gold">Sin sala</span></div>
     </div>
     <div class="mode-card" onclick="G.go('sRegister',{mode:'host'})">
-      <div class="mode-icon">✈️</div>
+      <div class="mode-icon"></div>
       <div class="mode-title">Ser Piloto (Host)</div>
       <p class="mode-desc">Lidera tu delegación. Crea la sala, recibes el código y lanzas el taller cuando todos aborden.</p>
       <div class="btn-group"><span class="badge badge-dawn">Piloto</span><span class="badge badge-blue">Hasta 30</span></div>
     </div>
     <div class="mode-card" onclick="G.go('sJoin')">
-      <div class="mode-icon">🚀</div>
+      <div class="mode-icon"></div>
       <div class="mode-title">Unirse al Vuelo</div>
       <p class="mode-desc">¿Tienes el código de sala? Aborda como pasajero y compite en tiempo real.</p>
       <div class="btn-group"><span class="badge badge-gold">Código requerido</span></div>
@@ -1105,28 +1105,9 @@ select.f-input{appearance:none;cursor:pointer}
     </div>
 
     <div class="f-wrap">
-      <label class="f-label">Tu Avatar de Delegado</label>
-      <div class="avatar-upload-zone" id="avatarZone" onclick="document.getElementById('avatarFileInput').click()">
-        <div class="auz-circle">
-          <div class="auz-placeholder" id="auzPlaceholder">
-            <div class="auz-icon">📷</div>
-            <div class="auz-text">Sube tu foto</div>
-            <div class="auz-sub">toca aquí</div>
-          </div>
-          <img id="auzImg" class="auz-photo" src="" alt="Tu avatar">
-          <div class="auz-edit-overlay">✏️</div>
-        </div>
-        <div class="auz-ring"></div>
-      </div>
-      <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="G.handleAvatarUpload(this,'reg')">
-      <div class="auz-actions" id="auzActions" style="display:none">
-        <button class="btn btn-ghost btn-sm" type="button" onclick="document.getElementById('avatarFileInput').click()">🔄 Cambiar foto</button>
-        <button class="btn btn-ghost btn-sm" type="button" onclick="G.clearAvatar('reg')">✕ Quitar</button>
-      </div>
-      <p class="auz-hint">Aparecerá como tu avatar en la sala y tabla de puntajes</p>
-      <!-- Fallback pixel art si no sube foto -->
-      <div class="auz-fallback-label">O elige un avatar prediseñado:</div>
-      <div class="avatar-grid" id="avatarGrid" style="margin-top:6px"></div>
+      <label class="f-label">Avatar de Delegado</label>
+      <p style="font-family:var(--f-mono);font-size:.7rem;color:var(--silver);margin-bottom:10px">Selecciona tu representación visual</p>
+      <div class="avatar-grid" id="avatarGrid"></div>
     </div>
 
     <div class="f-wrap">
@@ -1149,7 +1130,7 @@ select.f-input{appearance:none;cursor:pointer}
     </div>
 
     <div class="btn-group" style="margin-top:28px">
-      <button class="btn btn-gold btn-lg" onclick="G.register()">🛫 Abordar →</button>
+      <button class="btn btn-gold btn-lg" onclick="G.register()">Abordar →</button>
       <button class="btn btn-ghost" onclick="G.go('sModeSelect')">← Volver</button>
     </div>
   </div>
@@ -1168,27 +1149,9 @@ select.f-input{appearance:none;cursor:pointer}
       <input type="text" id="jName" class="f-input" placeholder="Tu nombre de delegado" maxlength="40">
     </div>
     <div class="f-wrap">
-      <label class="f-label">Tu Avatar de Delegado</label>
-      <div class="avatar-upload-zone" id="avatarZoneJoin" onclick="document.getElementById('avatarFileInputJoin').click()">
-        <div class="auz-circle">
-          <div class="auz-placeholder" id="auzPlaceholderJoin">
-            <div class="auz-icon">📷</div>
-            <div class="auz-text">Sube tu foto</div>
-            <div class="auz-sub">toca aquí</div>
-          </div>
-          <img id="auzImgJoin" class="auz-photo" src="" alt="Tu avatar">
-          <div class="auz-edit-overlay">✏️</div>
-        </div>
-        <div class="auz-ring"></div>
-      </div>
-      <input type="file" id="avatarFileInputJoin" accept="image/*" style="display:none" onchange="G.handleAvatarUpload(this,'join')">
-      <div class="auz-actions" id="auzActionsJoin" style="display:none">
-        <button class="btn btn-ghost btn-sm" type="button" onclick="document.getElementById('avatarFileInputJoin').click()">🔄 Cambiar foto</button>
-        <button class="btn btn-ghost btn-sm" type="button" onclick="G.clearAvatar('join')">✕ Quitar</button>
-      </div>
-      <p class="auz-hint">Aparecerá en la sala y tabla en vivo</p>
-      <div class="auz-fallback-label">O elige un avatar prediseñado:</div>
-      <div class="avatar-grid" id="avatarGridJoin" style="margin-top:6px"></div>
+      <label class="f-label">Avatar de Delegado</label>
+      <p style="font-family:var(--f-mono);font-size:.7rem;color:var(--silver);margin-bottom:10px">Selecciona tu representación visual</p>
+      <div class="avatar-grid" id="avatarGridJoin"></div>
     </div>
     <div class="f-wrap">
       <label class="f-label" for="jCountry">Tu País</label>
@@ -1200,7 +1163,7 @@ select.f-input{appearance:none;cursor:pointer}
         style="font-family:var(--f-head);font-size:1.8rem;letter-spacing:.2em;text-transform:uppercase">
     </div>
     <div class="btn-group">
-      <button class="btn btn-gold btn-lg" onclick="G.joinRoom()">🛫 Abordar →</button>
+      <button class="btn btn-gold btn-lg" onclick="G.joinRoom()">Abordar →</button>
       <button class="btn btn-ghost" onclick="G.go('sModeSelect')">← Volver</button>
     </div>
   </div>
@@ -1209,12 +1172,19 @@ select.f-input{appearance:none;cursor:pointer}
 <!-- ─── WAITING (HOST) ─── -->
 <div class="screen" id="sWaiting">
   <div style="margin-top:32px;text-align:center">
-    <div class="eyebrow">✈️ Sala de Embarque — Piloto</div>
+    <div class="eyebrow">Sala de Embarque — Piloto</div>
     <h2 class="big-title">Código de <em>Vuelo</em></h2>
     <div class="room-code-display" id="roomCodeDisplay">------</div>
     <p class="body-text">Comparte este código con tus pasajeros. Selecciona el módulo cuando estén todos a bordo.</p>
-    <div style="margin-top:12px">
-      <span id="roomPlayerCount" style="font-family:var(--f-mono);font-size:.75rem;color:var(--silver)">0 / 30 a bordo</span>
+    <div style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:16px">
+      <span id="roomPlayerCount" style="font-family:var(--f-mono);font-size:.75rem;color:var(--silver)">0 a bordo</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <label style="font-family:var(--f-mono);font-size:.65rem;color:rgba(240,192,64,.7);letter-spacing:.1em">CUPO MÁXIMO</label>
+        <input type="number" id="roomMaxPlayers" min="2" max="500" value="30"
+          style="width:70px;background:rgba(11,30,63,.7);border:1px solid rgba(240,192,64,.3);border-radius:8px;
+          padding:6px 10px;color:var(--cream);font-family:var(--f-head);font-size:1rem;text-align:center;outline:none"
+          onchange="S.roomMax=parseInt(this.value)||30;document.getElementById('roomPlayerCount').textContent=Object.keys(S.roomPlayers||{}).length+' / '+S.roomMax+' a bordo'">
+      </div>
     </div>
   </div>
   <div class="boarding-list" id="roomPlayersList" style="margin-top:20px"></div>
@@ -1231,7 +1201,7 @@ select.f-input{appearance:none;cursor:pointer}
   <div style="margin-top:32px;text-align:center">
     <div class="eyebrow">A bordo del vuelo</div>
     <h2 class="big-title">Sala <em id="wpRoomCode">---</em></h2>
-    <div style="font-size:5rem;margin:28px 0;animation:planeBounce 1.5s ease-in-out infinite">✈️</div>
+    <div style="font-size:5rem;margin:28px 0;animation:planeBounce 1.5s ease-in-out infinite"></div>
     <p class="body-text">El piloto lanzará el vuelo en breve.<br>Abróchate el cinturón — cuando despegue, ¡no se para!</p>
     <div class="boarding-list" style="margin-top:20px" id="wpPlayersList"></div>
   </div>
@@ -1257,7 +1227,7 @@ select.f-input{appearance:none;cursor:pointer}
     </div>
     <div class="flt-route">
       <span>SDQ</span>
-      <span class="flt-plane-move">✈️</span>
+      <span class="flt-plane-move"></span>
       <div class="flt-progress"><div class="flt-prog-fill" id="fltProgFill" style="width:0%"></div></div>
       <span>MUN</span>
     </div>
@@ -1334,6 +1304,12 @@ select.f-input{appearance:none;cursor:pointer}
     </div>
     <div id="finalLb" style="display:none;margin-bottom:20px">
       <div class="eyebrow">🏆 Tabla Final del Vuelo</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-family:var(--f-mono);font-size:.7rem;color:var(--gold);letter-spacing:.1em">TABLA FINAL</span>
+        <button class="btn btn-ghost btn-sm" onclick="G.refreshFinalLeaderboard()" style="font-size:.72rem;padding:5px 12px">
+          Actualizar tabla
+        </button>
+      </div>
       <div class="leaderboard" id="finalLeaderboard"></div>
     </div>
     <div class="eval-panel">
@@ -1390,9 +1366,9 @@ select.f-input{appearance:none;cursor:pointer}
       <div class="divider"><div class="diamond"></div></div>
     </div>
 
-    <!-- Gestión de Usuarios — SOLO visible para Samuel (master admin) -->
-    <div class="admin-panel" id="adminUserSection" style="display:none">
-      <div class="admin-title">👥 Gestión de Usuarios</div>
+    <!-- Gestión de Usuarios -->
+    <div class="admin-panel">
+      <div class="admin-title">Gestión de Usuarios</div>
       <p style="font-size:.82rem;color:var(--silver);margin-bottom:14px">
         Crea usuarios con contraseña. Los delegados ingresan con su usuario y clave asignados.
       </p>
@@ -1416,6 +1392,7 @@ select.f-input{appearance:none;cursor:pointer}
         <div>
           <label class="f-label">Rol</label>
           <select id="newUserRole" class="f-input" style="margin-top:4px">
+            <option value="anfitrion">Anfitrión (crea talleres)</option>
             <option value="delegado">Delegado</option>
             <option value="piloto">Piloto</option>
           </select>
@@ -1446,12 +1423,12 @@ select.f-input{appearance:none;cursor:pointer}
 
     <!-- Talleres -->
     <div class="admin-panel" style="margin-top:16px">
-      <div class="admin-title">✈️ Control de Talleres</div>
+      <div class="admin-title">Control de Talleres</div>
       <div id="workshopToggles"></div>
     </div>
 
     <div class="admin-panel" style="margin-top:16px">
-      <div class="admin-title">📝 Editor de Talleres Personalizados</div>
+      <div class="admin-title">Editor de Talleres Personalizados</div>
       <div class="f-wrap">
         <label class="f-label">Nombre del taller</label>
         <input type="text" id="newWorkshopName" class="f-input" placeholder="Ej: Resoluciones de Paz" maxlength="50">
@@ -1465,7 +1442,7 @@ select.f-input{appearance:none;cursor:pointer}
     </div>
 
     <div class="admin-panel" style="margin-top:16px">
-      <div class="admin-title">🎮 Talleres Guardados</div>
+      <div class="admin-title">Talleres Guardados</div>
       <div id="savedWorkshopsList"></div>
     </div>
 
@@ -1496,18 +1473,11 @@ const FB_CONFIG = {
   measurementId: "G-ZMP8MZW8RD"
 };
 
-/* ── IMGBB CONFIG — Almacenamiento secundario de avatares
-   Primario: Firebase Storage  |  Respaldo: ImgBB
-   ─────────────────────────────────────────────── */
-const IMGBB_API_KEY = '7929e21c9bfeacd37823499f921024f3';
-
 let db = null;
-let storage = null;
 try {
   firebase.initializeApp(FB_CONFIG);
-  db      = firebase.database();
-  storage = firebase.storage();
-  console.log("✅ Firebase SAMUELSGA conectado — DB + Storage activos");
+  db = firebase.database();
+  console.log("✅ Firebase SAMUELSGA conectado");
 } catch(e) { console.warn("Firebase error:", e.message); }
 
 /* ============================================================ AVATARS ============================================================ */
@@ -1668,13 +1638,13 @@ const CIRC    = 144.5;
   const dots  = document.querySelectorAll('.load-dot');
 
   const steps = [
-    {p:10, l:'Iniciando motores…',         s:'Encendiendo sistemas de DELEGAME',    dot:0, ms:500},
-    {p:22, l:'Revisando pasaportes…',      s:'Verificando documentación de viaje',  dot:1, ms:800},
-    {p:38, l:'Cargando módulos…',          s:'Instalando talleres de entrenamiento',dot:2, ms:750},
-    {p:52, l:'Compilando escenarios…',     s:'Preparando sala de sesiones',         dot:3, ms:700},
-    {p:68, l:'Conectando Firebase…',       s:'Inicializando multijugador en vivo',  dot:4, ms:800},
-    {p:84, l:'Preparando pista…',          s:'Comprobando sistemas de vuelo',       dot:5, ms:700},
-    {p:100,l:'¡Pista despejada! ✓',       s:'Bienvenido a DELEGAME',               dot:6, ms:600},
+    {p:10, l:'Iniciando motores…',         s:'Encendiendo sistemas de DELEGAME',    dot:0, ms:900},
+    {p:22, l:'Revisando pasaportes…',      s:'Verificando documentación de viaje',  dot:1, ms:1200},
+    {p:38, l:'Cargando módulos…',          s:'Instalando talleres de entrenamiento',dot:2, ms:1350},
+    {p:54, l:'Compilando escenarios…',     s:'Preparando sala de sesiones',         dot:3, ms:1400},
+    {p:70, l:'Conectando Firebase…',       s:'Inicializando multijugador en vivo',  dot:4, ms:1450},
+    {p:88, l:'Preparando pista…',          s:'Comprobando sistemas de vuelo',       dot:5, ms:1400},
+    {p:100,l:'¡Pista despejada! ✓',       s:'Bienvenido a DELEGAME',               dot:6, ms:1300},
   ];
 
   const updateDots = (a) => {
@@ -1783,6 +1753,7 @@ const G = {
     if(id==='sRegister') this._initRegisterScreen();
     if(id==='sModules')  this._buildModuleGrid();
     if(id==='sAdmin')    this._initAdmin();
+    if(id==='sReg')      setTimeout(()=>this._restoreSession(),50);
     if(id==='sJoin')     this._buildAvatarGrid('avatarGridJoin', false);
   },
 
@@ -1793,7 +1764,7 @@ const G = {
     // Eyebrow
     const ey = document.getElementById('regEyebrow');
     ey.textContent = S.mode==='host'
-      ? '✈️ Tarjeta de Embarque — Piloto'
+      ? ' Tarjeta de Embarque — Piloto'
       : '🎫 Tarjeta de Embarque — Pasajero';
   },
 
@@ -1811,7 +1782,7 @@ const G = {
       const b = document.createElement('button');
       const isPlt = av.isPilot;
       b.className = 'av-btn' + (isPlt ? ' av-pilot' : '');
-      b.title = av.name + (isPlt ? ' ✈️ Piloto' : '');
+      b.title = av.name + (isPlt ? '  Piloto' : '');
       b.dataset.key = key;
 
       // Pixel art image
@@ -1837,6 +1808,8 @@ const G = {
         S.player.avatarKey = key;
         S.player.avatar = av.uri;
         S.player.avatarName = av.name;
+        // Update header preview live as they pick avatar
+        if(S.player.name) G._updateHdrAvatar();
       }
       b.onclick = () => {
         g.querySelectorAll('.av-btn').forEach(x=>x.classList.remove('sel'));
@@ -1850,140 +1823,12 @@ const G = {
   },
 
   /* ── AVATAR PHOTO UPLOAD ── */
-  /* ── MASTER ADMIN CHECK — solo Samuel puede ver Gestión de Usuarios ── */
-  _isMasterAdmin(){
-    return S.adminUser === 'Samuel SGA';
-  },
+  handleAvatarUpload(){ /* photo upload removed — use pixel avatars */ },
 
-  /* ── IMGBB UPLOAD — respaldo cuando Firebase Storage falla ── */
-  _uploadToImgBB(base64Data, cb){
-    const b64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
-    const form = new FormData();
-    form.append('key', IMGBB_API_KEY);
-    form.append('image', b64);
-    fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: form })
-      .then(r => r.json())
-      .then(data => {
-        if(data.success && data.data?.url) cb(null, data.data.url);
-        else cb(new Error('ImgBB: ' + JSON.stringify(data)), null);
-      })
-      .catch(err => cb(err, null));
-  },
-
-  handleAvatarUpload(input, ctx){
-    const file = input.files[0];
-    if(!file) return;
-
-    const isReg   = ctx === 'reg';
-    const imgEl   = document.getElementById(isReg ? 'auzImg'    : 'auzImgJoin');
-    const actions = document.getElementById(isReg ? 'auzActions': 'auzActionsJoin');
-    const zone    = document.getElementById(isReg ? 'avatarZone': 'avatarZoneJoin');
-    input.value = '';
-
-    // Show upload indicator
-    zone.classList.remove('has-photo');
-    const placeholder = zone.querySelector('.auz-placeholder');
-    if(placeholder) placeholder.innerHTML = '<div style="font-size:1.4rem;animation:spin 0.8s linear infinite">⏳</div><div style="font-family:var(--f-mono);font-size:.55rem;color:var(--gold);margin-top:4px">Subiendo…</div>';
-
-    const applyURL = (url) => {
-      if(!url) return;
-      imgEl.src = url;
-      imgEl.style.removeProperty('display');
-      zone.classList.add('has-photo');
-      if(actions) actions.style.display = 'flex';
-      S.player.avatar    = url;
-      S.player.avatarKey = 'photo';
-      zone.classList.remove('flash'); void zone.offsetWidth; zone.classList.add('flash');
-      setTimeout(() => zone.classList.remove('flash'), 700);
-    };
-
-    // Step 1: Show preview instantly from local file (data URL)
-    const reader = new FileReader();
-    reader.onerror = () => {
-      if(placeholder) placeholder.innerHTML = '<div class="auz-icon">📷</div><div class="auz-text">Sube tu foto</div><div class="auz-sub">toca aquí</div>';
-      this.toast('❌ Error al leer la imagen', 'error', 3000);
-    };
-    reader.onload = (e) => {
-      const raw = e.target.result;
-      // Show locally RIGHT AWAY for instant feedback
-      applyURL(raw);
-      this.toast('📸 Foto lista localmente', 'info', 1500);
-
-      // Step 2: Comprimir con canvas y subir (Firebase → ImgBB como respaldo)
-      const compressImage = (src, onDone) => {
-        const tmpImg = new Image();
-        tmpImg.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            canvas.width = 300; canvas.height = 300;
-            const c = canvas.getContext('2d');
-            const sz = Math.min(tmpImg.naturalWidth, tmpImg.naturalHeight);
-            const ox = (tmpImg.naturalWidth  - sz) / 2;
-            const oy = (tmpImg.naturalHeight - sz) / 2;
-            c.drawImage(tmpImg, ox, oy, sz, sz, 0, 0, 300, 300);
-            onDone(canvas.toDataURL('image/jpeg', 0.82));
-          } catch(e){ onDone(src); }
-        };
-        tmpImg.onerror = () => onDone(src);
-        tmpImg.src = src;
-      };
-
-      // RESPALDO: subir a ImgBB si Firebase falla o no está disponible
-      const tryImgBB = (compressedData) => {
-        this.toast('☁️ Sincronizando con ImgBB…', 'info', 2000);
-        this._uploadToImgBB(compressedData, (err, url) => {
-          if(!err && url){
-            applyURL(url);
-            S.player.avatar = url;
-            this.toast('✅ Foto subida a ImgBB 🖼️ — visible en todos los dispositivos', 'success', 3500);
-          } else {
-            console.warn('ImgBB también falló:', err?.message);
-            this.toast('⚠️ Foto guardada solo localmente (sin conexión)', 'warn', 4000);
-          }
-        });
-      };
-
-      // PRIMARIO: Firebase Storage
-      const tryFirebase = (compressedData) => {
-        if(!storage){ tryImgBB(compressedData); return; }
-        fetch(compressedData).then(r => r.blob()).then(blob => {
-          const uid  = S.playerId || S.player.name?.replace(/\s+/g,'_') || ('u_' + Date.now());
-          const ref  = storage.ref(`avatars/${uid}.jpg`);
-          const task = ref.put(blob, { contentType: 'image/jpeg' });
-          task.on('state_changed', null,
-            (err) => {
-              console.warn('⚠️ Firebase Storage falló → usando ImgBB:', err.message);
-              this.toast('⚠️ Firebase no disponible, usando ImgBB…', 'warn', 2000);
-              tryImgBB(compressedData);
-            },
-            () => {
-              task.snapshot.ref.getDownloadURL().then(url => {
-                applyURL(url);
-                S.player.avatar = url;
-                this.toast('✅ ¡Foto sincronizada en Firebase 🔥 — visible en todos los dispositivos!', 'success', 3000);
-              }).catch(() => tryImgBB(compressedData));
-            }
-          );
-        }).catch(() => tryImgBB(compressedData));
-      };
-
-      compressImage(raw, (compressed) => tryFirebase(compressed));
-    };
-    reader.readAsDataURL(file);
-  },
-
-  clearAvatar(ctx){
-    const isReg  = ctx === 'reg';
-    const imgEl  = document.getElementById(isReg ? 'auzImg'    : 'auzImgJoin');
-    const actions= document.getElementById(isReg ? 'auzActions': 'auzActionsJoin');
-    const zone   = document.getElementById(isReg ? 'avatarZone': 'avatarZoneJoin');
-    imgEl.src = '';
-    imgEl.style.display = 'none';
-    zone.classList.remove('has-photo', 'flash');
-    if(actions) actions.style.display = 'none';
-    S.player.avatar    = '';
-    S.player.avatarKey = 'd0';
-    // Re-select first pixel art avatar
+    clearAvatar(ctx){
+    // Reset to first pixel avatar
+    S.player.avatar = ''; S.player.avatarKey = 'd0';
+    const isReg = ctx === 'reg';
     const grid = document.getElementById(isReg ? 'avatarGrid' : 'avatarGridJoin');
     if(grid){ const first = grid.querySelector('.av-btn'); if(first) first.click(); }
   },
@@ -2022,13 +1867,63 @@ const G = {
     S.player.country = country;
     S.player.name  = name;
     S.player.title = document.getElementById('iTitle').value.trim() || 'Delegado';
-    const hdrAv = S.player.avatar && S.player.avatar.startsWith('data:')
-      ? `<img src="${'${S.player.avatar}'}" style="width:24px;height:24px;border-radius:50%;image-rendering:pixelated;vertical-align:middle;margin-right:6px;">`
-      : '👤 ';
-    document.getElementById('hdrPlayer').innerHTML = hdrAv + name;
-    this.toast(`Bienvenido a bordo, ${name}! ${S.player.avatar}`,'success');
+    G._updateHdrAvatar();
+    document.getElementById('hdrPlayer').innerHTML = G._makeHdrAv() + name;
+    // Persist player data across reloads
+    sessionStorage.setItem('delegame_player', JSON.stringify({
+      name: S.player.name, country: S.player.country,
+      title: S.player.title, avatar: S.player.avatar, avatarKey: S.player.avatarKey
+    }));
+    this.toast(`Bienvenido a bordo, ${name}`,'success');
     if(S.mode==='solo')  this.go('sModules');
     else if(S.mode==='host') this._createRoom();
+  },
+
+  /* ── HEADER AVATAR HELPER ── */
+  _makeHdrAv(){
+    const av = S.player.avatar;
+    if(!av) return '';
+    return G._avatarCircle(av, 28, 'border:2px solid var(--gold);vertical-align:middle;margin-right:7px;box-shadow:0 0 8px rgba(240,192,64,.3);');
+  },
+
+  /* Render any avatar URI (SVG data: or https:) as a crisp circle */
+  _avatarCircle(uri, size, extraStyle=''){
+    if(!uri) return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:rgba(240,192,64,.12);display:inline-flex;align-items:center;justify-content:center;font-size:${Math.round(size*.4)}px;${extraStyle}">?</div>`;
+    // background-image works for both SVG data URIs and https URLs
+    return `<span style="display:inline-block;width:${size}px;height:${size}px;border-radius:50%;` +
+           `background-image:url('${uri}');background-size:cover;background-position:center;` +
+           `flex-shrink:0;${extraStyle}"></span>`;
+  },
+
+  _updateHdrAvatar(){
+    const hdrEl = document.getElementById('hdrPlayer');
+    if(!hdrEl) return;
+    const name = S.player.name || hdrEl.textContent.replace(/^.{0,3}/, '').trim() || '';
+    if(name) hdrEl.innerHTML = this._makeHdrAv() + name;
+  },
+
+  /* ── RESTORE PLAYER SESSION ── */
+  _restoreSession(){
+    try {
+      const saved = sessionStorage.getItem('delegame_player');
+      if(!saved) return;
+      const p = JSON.parse(saved);
+      if(p.name)    { S.player.name    = p.name;    const el=document.getElementById('iName');    if(el) el.value=p.name; }
+      if(p.country) { S.player.country = p.country; const el=document.getElementById('iCountry'); if(el) el.value=p.country; }
+      if(p.title)   { S.player.title   = p.title;   const el=document.getElementById('iTitle');   if(el) el.value=p.title; }
+      if(p.avatar)  { S.player.avatar  = p.avatar;  S.player.avatarKey = p.avatarKey || 'd0'; }
+      // Restore avatar selection in grid
+      if(p.avatarKey && p.avatarKey !== 'photo'){
+        setTimeout(() => {
+          const btn = document.querySelector(`.av-btn[data-key="${p.avatarKey}"]`);
+          if(btn){ btn.click(); }
+        }, 100);
+      }
+      // Restore header
+      if(p.name){
+        document.getElementById('hdrPlayer').innerHTML = G._makeHdrAv() + p.name;
+      }
+    } catch(e){}
   },
 
   /* ── JOIN ── */
@@ -2090,7 +1985,7 @@ const G = {
       const mod = qdb[key];
       const b = document.createElement('button');
       b.className='btn btn-blue';
-      b.textContent=`${mod.icon||'📚'} ${mod.name}`;
+      b.textContent=mod.name;
       b.onclick=()=>this.hostLaunch(key);
       el.appendChild(b);
     });
@@ -2101,8 +1996,10 @@ const G = {
     db.ref(`rooms/${S.room}/players`).on('value',snap=>{
       const players=snap.val()||{};
       const list=Object.entries(players).map(([id,p])=>({id,...p}));
+      S.roomPlayers = snap.val()||{};
       this._renderBoardingList('roomPlayersList', list, true);
-      document.getElementById('roomPlayerCount').textContent=`${list.length} / 30 a bordo`;
+      const max = S.roomMax || 30;
+      document.getElementById('roomPlayerCount').textContent=`${list.length} / ${max} a bordo`;
     });
   },
 
@@ -2128,10 +2025,8 @@ const G = {
     el.innerHTML='';
     list.forEach((p,i)=>{
       const isPilot=p.id==='HOST'||i===0&&p.avatarKey&&PIXEL_AVATARS[p.avatarKey]?.isPilot;
-      const isImgURL = p.avatar && (p.avatar.startsWith('data:') || p.avatar.startsWith('http'));
-      const avatarHTML = isImgURL
-        ? `<img src="${p.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="avatar" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\\'font-size:1.3rem\\'>👤</span>'">`
-        : `<span style="font-size:1.3rem">${p.avatar||'👤'}</span>`;
+      const avSize = 36;
+      const avatarHTML = G._avatarCircle(p.avatar, avSize, 'width:100%;height:100%;');
       const d=document.createElement('div');
       d.className='pax-row';
       d.innerHTML=`
@@ -2210,7 +2105,7 @@ const G = {
       d.className='lb-row';
       d.innerHTML=`
         <div class="lb-rank ${i<3?'top'+(i+1):''}">${medals[i]||i+1}</div>
-        <div class="lb-avatar">${p.avatar&&(p.avatar.startsWith('data:')||p.avatar.startsWith('http'))?`<img src="${p.avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`:p.avatar||'👤'}</div>
+        <div class="lb-avatar">${G._avatarCircle(p.avatar, 24)}</div>
         <div class="lb-name">${p.name||'—'}</div>
         <div class="lb-country">${p.country||''}</div>
         <div class="lb-score">${(p.score||0).toLocaleString()}</div>`;
@@ -2381,17 +2276,20 @@ const G = {
   /* ── ARRIVAL SCREEN ── */
   _showArrival(){
     const arr=document.getElementById('arrivalScreen');
+    // Use _avatarCircle to render properly (never dump raw SVG URI as text)
+    const avCircle = G._avatarCircle(S.player.avatar, 48,
+      'vertical-align:middle;margin-right:10px;border:2px solid var(--gold);display:inline-block;');
     document.getElementById('arrivalPlayerName').innerHTML =
-      `${S.player.avatar} ${S.player.name} · ${S.player.country}`;
-    
+      avCircle + `${S.player.name} · ${S.player.country}`;
+
     // Add buttons
     const btns=document.getElementById('arrivalBtns');
     btns.innerHTML=`
       <div class="btn-group" style="justify-content:center">
-        <button class="btn btn-gold btn-lg" onclick="G._hideArrival(true)">🏆 Ver Resultados</button>
-        <button class="btn btn-ghost" onclick="G._hideArrival(false)">⌂ Terminal</button>
+        <button class="btn btn-gold btn-lg" onclick="G._hideArrival(true)">Ver Resultados</button>
+        <button class="btn btn-ghost" onclick="G._hideArrival(false)">Terminal</button>
       </div>`;
-    
+
     arr.classList.add('on');
   },
 
@@ -2407,9 +2305,7 @@ const G = {
     const pct=Math.round((g.correct/g.qs.length)*100);
     const qdb=getQDB();
     const modName=qdb[g.mod]?.name||g.mod;
-    const resAv = S.player.avatar && (S.player.avatar.startsWith('data:') || S.player.avatar.startsWith('http'))
-      ? `<img src="${S.player.avatar}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:2px solid var(--gold);">`
-      : (S.player.avatar ? S.player.avatar + ' ' : '');
+    const resAv = G._avatarCircle(S.player.avatar, 32, 'vertical-align:middle;margin-right:8px;border:2px solid var(--gold);display:inline-block;');
     document.getElementById('resName').innerHTML = resAv + S.player.name;
     document.getElementById('resMod').textContent=`${modName} · ${S.player.country}`;
     document.getElementById('resScore').textContent=g.score.toLocaleString();
@@ -2429,32 +2325,30 @@ const G = {
     document.getElementById('evalTitle').textContent=gr.t;
     document.getElementById('evalText').textContent=gr.d;
 
-    // Final leaderboard (multiplayer)
-    if(db&&S.room){
-      db.ref(`rooms/${S.room}/players`).once('value').then(snap=>{
-        const players=snap.val()||{};
-        const list=Object.entries(players).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score);
-        if(list.length>1){
-          document.getElementById('finalLb').style.display='block';
-          const medals=['🥇','🥈','🥉'];
-          const lb=document.getElementById('finalLeaderboard');
-          lb.innerHTML='';
-          list.forEach((p,i)=>{
-            const d=document.createElement('div');
-            d.className='lb-row';
-            d.innerHTML=`
-              <div class="lb-rank ${i<3?'top'+(i+1):''}">${medals[i]||i+1}</div>
-              <div class="lb-avatar">${p.avatar&&(p.avatar.startsWith('data:')||p.avatar.startsWith('http'))?`<img src="${p.avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`:p.avatar||'👤'}</div>
-              <div class="lb-name">${p.name||'—'}</div>
-              <div class="lb-country">${p.country||''}</div>
-              <div class="lb-score">${(p.score||0).toLocaleString()}</div>`;
-            lb.appendChild(d);
-          });
-        }
-      });
-    }
+    // Final leaderboard (multiplayer) — auto-load + refresh button available
+    if(db&&S.room) setTimeout(()=>this.refreshFinalLeaderboard(), 500);
 
     this.go('sResults');
+  },
+
+  refreshFinalLeaderboard(){
+    if(!db || !S.room) return;
+    db.ref(`rooms/${S.room}/players`).once('value').then(snap=>{
+      const players = snap.val()||{};
+      const list = Object.entries(players).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score);
+      const lb = document.getElementById('finalLeaderboard');
+      if(!lb) return;
+      if(list.length <= 1){ lb.innerHTML='<p style="text-align:center;color:var(--silver);font-size:.82rem;padding:12px">Aún no hay otros jugadores registrados.</p>'; return; }
+      lb.innerHTML = list.map((p,i)=>`
+        <div class="lb-row">
+          <div class="lb-rank ${i<3?'top'+(i+1):''}">${i+1}</div>
+          <div class="lb-avatar">${G._avatarCircle(p.avatar, 24)}</div>
+          <div class="lb-name">${p.name||'—'}</div>
+          <div class="lb-country">${p.country||''}</div>
+          <div class="lb-score">${(p.score||0).toLocaleString()}</div>
+        </div>`).join('');
+      document.getElementById('finalLb').style.display='block';
+    });
   },
 
   retry(){
@@ -2493,7 +2387,7 @@ const G = {
       document.getElementById('adminLock').style.display='none';
       document.getElementById('adminContent').style.display='block';
       this._renderAdminContent();
-      if(this._isMasterAdmin()) this._renderUsersTable();
+      this._renderUsersTable();
     } else {
       document.getElementById('adminLock').style.display='flex';
       document.getElementById('adminContent').style.display='none';
@@ -2511,6 +2405,11 @@ const G = {
     
     // Check created user accounts (async)
     const doLogin = (userMatch) => {
+    if(userMatch && userMatch.disabled){
+      if(card){ card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),500); }
+      this.toast('Cuenta desactivada. Contacte al administrador.', 'error', 4000);
+      return;
+    }
     if(masterOk || userMatch){
       S.adminLoggedIn = true;
       S.adminUser     = userMatch ? userMatch.name : 'Samuel SGA';
@@ -2518,10 +2417,8 @@ const G = {
       document.getElementById('adminLock').style.display    = 'none';
       document.getElementById('adminContent').style.display = 'block';
       this._renderAdminContent();
-      if(this._isMasterAdmin()) this._renderUsersTable();
-      const welcomeName = document.getElementById('adminWelcomeName');
-      if(welcomeName) welcomeName.textContent = S.adminUser;
-      this.toast(`🛡️ Bienvenido, ${S.adminUser}`, 'success', 3000);
+      this._renderUsersTable();
+      this.toast(`Bienvenido, ${S.adminUser}`, 'success', 3000);
     } else {
       if(card){ card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),500); }
       if(document.getElementById('adminPass')) document.getElementById('adminPass').value = '';
@@ -2587,10 +2484,22 @@ const G = {
   },
 
   deleteUser(id){
+    if(!confirm('¿Eliminar este usuario permanentemente?')) return;
     this._getUsers(users => {
       this._saveUsers(users.filter(u => u.id !== id));
       this._renderUsersTable();
-      this.toast('🗑 Usuario eliminado', 'info', 2000);
+      this.toast('Usuario eliminado', 'info', 2000);
+    });
+  },
+
+  toggleUserDisabled(id){
+    this._getUsers(users => {
+      const u = users.find(x => x.id === id);
+      if(!u) return;
+      u.disabled = !u.disabled;
+      this._saveUsers(users);
+      this._renderUsersTable();
+      this.toast(u.disabled ? `Cuenta "${u.name}" desactivada` : `Cuenta "${u.name}" activada`, 'info', 2000);
     });
   },
 
@@ -2608,20 +2517,21 @@ const G = {
       if(table) table.style.display = '';
       if(noMsg) noMsg.style.display = 'none';
       tbody.innerHTML = users.map(u => `
-        <tr>
-          <td><strong>${u.name}</strong></td>
+        <tr style="${u.disabled?'opacity:.45':''}">
+          <td><strong>${u.name}</strong>${u.disabled?' <span style="font-family:var(--f-mono);font-size:.6rem;color:#F87171">[inactivo]</span>':''}</td>
           <td><span style="font-family:var(--f-mono);font-size:.82rem;background:rgba(255,255,255,.06);
             padding:3px 8px;border-radius:6px;">${u.pass}</span></td>
           <td><span class="user-role-badge role-${u.role}">${u.role}</span></td>
-          <td><button class="admin-del-btn" onclick="G.deleteUser(${u.id})">✕</button></td>
+          <td style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="admin-del-btn" style="border-color:rgba(${u.disabled?'52,211,153':'239,68,68'},.3);color:${u.disabled?'#34D399':'#F87171'}"
+              onclick="G.toggleUserDisabled(${u.id})">${u.disabled?'Activar':'Desactivar'}</button>
+            <button class="admin-del-btn" onclick="G.deleteUser(${u.id})">Eliminar</button>
+          </td>
         </tr>`).join('');
     });
   },
 
   _renderAdminContent(){
-    // Gestión de Usuarios: SOLO para Samuel (master admin)
-    const userSection = document.getElementById('adminUserSection');
-    if(userSection) userSection.style.display = this._isMasterAdmin() ? 'block' : 'none';
     this._renderWorkshopToggles();
     this._renderCustomQsList();
     this._renderSavedWorkshops();
