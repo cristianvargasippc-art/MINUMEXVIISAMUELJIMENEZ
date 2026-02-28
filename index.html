@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>MINUME XVII · Flight to Diplomacy</title>
+<title>DELEGAME · Academia Diplomática</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <style>
 /* ============================================================  TOKENS  ============================================================ */
@@ -230,13 +231,7 @@ body{font-family:var(--f-body);background:var(--sky);color:var(--cream);min-heig
 .skip-vid:hover{border-color:var(--gold);color:var(--cream);background:rgba(240,192,64,.12);transform:scale(1.04)}
 
 /* Fallback logo */
-#loadLogoFallback{
-  display:none;width:min(260px,70vw);height:80px;
-  border-radius:16px;background:rgba(240,192,64,.08);
-  border:1px solid rgba(240,192,64,.2);
-  align-items:center;justify-content:center;
-  flex-direction:row;gap:14px;padding:20px;
-}
+#loadLogoFallback{ display:none!important; }
 
 /* Plane bounce */
 .load-plane{font-size:1.3rem;animation:planeBounce 1.5s ease-in-out infinite}
@@ -263,8 +258,8 @@ body{font-family:var(--f-body);background:var(--sky);color:var(--cream);min-heig
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 
 /* ===== TYPOGRAPHY ===== */
-.eyebrow{font-family:var(--f-mono);font-size:.67rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
-.big-title{font-family:var(--f-head);font-size:clamp(2rem,7vw,4rem);line-height:1.05;color:var(--cream)}
+.eyebrow{font-family:var(--f-mono);font-size:.67rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;text-align:center}
+.big-title{font-family:var(--f-head);font-size:clamp(2rem,7vw,4rem);line-height:1.05;color:var(--cream);text-align:center}
 .big-title em{color:var(--gold);font-style:normal}
 .body-text{font-size:1rem;line-height:1.8;color:rgba(240,237,232,.7)}
 
@@ -420,46 +415,85 @@ select.f-input{appearance:none;cursor:pointer}
 /* ── AVATAR UPLOAD ZONE ── */
 .avatar-upload-zone{
   position:relative;
-  width:110px;height:110px;border-radius:50%;
-  cursor:pointer;margin:0 auto 12px;
+  width:120px;height:120px;border-radius:50%;
+  cursor:pointer;margin:0 auto 14px;
   display:block;
+  /* The photo gets set here as background for reliability */
 }
-.auz-preview{
-  width:100%;height:100%;border-radius:50%;
+/* The circle itself */
+.auz-circle{
+  width:120px;height:120px;border-radius:50%;
   overflow:hidden;
-  background:rgba(11,30,63,.7);
-  border:2px dashed rgba(240,192,64,.3);
-  transition:all .25s;
+  background:rgba(11,30,63,.8);
+  border:2px dashed rgba(240,192,64,.4);
+  transition:border-color .25s, box-shadow .25s;
   display:flex;align-items:center;justify-content:center;
+  position:relative;
 }
-.avatar-upload-zone:hover .auz-preview{
-  border-color:var(--gold);background:rgba(240,192,64,.08);
+.avatar-upload-zone:hover .auz-circle{
+  border-color:var(--gold);
+  box-shadow:0 0 20px rgba(240,192,64,.2);
 }
+/* Placeholder content (camera icon) */
 .auz-placeholder{
-  display:flex;flex-direction:column;align-items:center;gap:4px;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
   text-align:center;padding:10px;
+  position:absolute;inset:0;
+  justify-content:center;
+  pointer-events:none;
+  transition:opacity .2s;
 }
-.auz-icon{font-size:1.8rem;line-height:1}
-.auz-text{font-family:var(--f-mono);font-size:.6rem;color:var(--gold);letter-spacing:.08em}
-.auz-sub{font-family:var(--f-mono);font-size:.5rem;color:var(--silver);letter-spacing:.05em}
-.auz-img{
-  width:100%;height:100%;object-fit:cover;border-radius:50%;
-  display:block;
+.auz-icon{font-size:2rem;line-height:1}
+.auz-text{font-family:var(--f-mono);font-size:.62rem;color:var(--gold);letter-spacing:.06em;font-weight:600}
+.auz-sub{font-family:var(--f-mono);font-size:.52rem;color:rgba(255,255,255,.4);letter-spacing:.04em}
+
+/* The actual photo — fills the circle */
+.auz-photo{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;border-radius:50%;
+  opacity:0;           /* hidden by default via opacity, not display:none */
+  pointer-events:none;
+  z-index:2;
+  transition:opacity .25s;
 }
-/* Animated ring on hover */
+/* When .has-photo is set on the zone: show photo, hide placeholder */
+.avatar-upload-zone.has-photo .auz-placeholder{ opacity:0;pointer-events:none; }
+.avatar-upload-zone.has-photo .auz-circle{ border:3px solid var(--gold)!important; }
+.avatar-upload-zone.has-photo .auz-photo{ opacity:1;pointer-events:auto; }
+
+/* Edit overlay on hover when has photo */
+.auz-edit-overlay{
+  position:absolute;inset:0;border-radius:50%;
+  background:rgba(0,0,0,.55);
+  display:none;align-items:center;justify-content:center;
+  z-index:3;font-size:1.4rem;
+  transition:opacity .2s;
+}
+.avatar-upload-zone.has-photo:hover .auz-edit-overlay{ display:flex; }
+
+/* Spinning ring on hover */
 .auz-ring{
-  position:absolute;inset:-4px;border-radius:50%;
+  position:absolute;inset:-5px;border-radius:50%;
   border:2px solid transparent;
-  background:conic-gradient(var(--gold) 0%, transparent 60%) border-box;
+  background:conic-gradient(var(--gold) 0%, transparent 55%) border-box;
   -webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);
   -webkit-mask-composite:destination-out;mask-composite:exclude;
-  opacity:0;transition:opacity .3s;
-  animation:ringSpin 3s linear infinite;
+  opacity:0;transition:opacity .25s;
+  animation:ringSpin 2.5s linear infinite;
 }
-.avatar-upload-zone:hover .auz-ring{opacity:1}
+.avatar-upload-zone:hover .auz-ring{ opacity:1; }
 @keyframes ringSpin{to{transform:rotate(360deg)}}
-/* State: has photo */
-.auz-preview.has-photo{border:3px solid var(--gold);border-style:solid}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Flash on upload success */
+@keyframes avatarFlash{
+  0%{ box-shadow:0 0 0 0 rgba(240,192,64,.9); }
+  100%{ box-shadow:0 0 0 20px rgba(240,192,64,0); }
+}
+.avatar-upload-zone.flash .auz-circle{
+  animation:avatarFlash 0.6s ease forwards;
+}
 
 .auz-actions{
   display:flex;justify-content:center;gap:8px;margin-top:8px;
@@ -505,10 +539,7 @@ select.f-input{appearance:none;cursor:pointer}
 @keyframes avatarConfirm{0%{box-shadow:0 0 0 0 rgba(240,192,64,.8)}100%{box-shadow:0 0 0 16px rgba(240,192,64,0)}}
 
 /* ======================================================= COUNTRY GRID ======================================================= */
-.country-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-top:10px}
-.ctry-btn{background:rgba(11,30,63,.5);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--cream);font-family:var(--f-body);font-size:.88rem;cursor:pointer;text-align:left;transition:all .2s}
-.ctry-btn:hover{border-color:var(--gold);background:rgba(240,192,64,.08)}
-.ctry-btn.sel{background:rgba(240,192,64,.15);border-color:var(--gold);color:var(--gold)}
+/* country-grid CSS removed */
 
 /* ======================================================= WAITING ROOM ======================================================= */
 .room-code-display{font-family:var(--f-head);font-size:clamp(3.5rem,12vw,6rem);letter-spacing:.2em;color:var(--gold);text-align:center;text-shadow:0 0 50px rgba(240,192,64,.4);margin:16px 0}
@@ -708,11 +739,137 @@ select.f-input{appearance:none;cursor:pointer}
 ::-webkit-scrollbar-thumb{background:rgba(240,192,64,.25);border-radius:2px}
 
 /* ======================================================= ADMIN LOGIN ======================================================= */
+/* ── ADMIN LOGIN CINEMATIC ── */
 .admin-lock{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:60vh;gap:20px;text-align:center;
+  min-height:80vh;gap:0;text-align:center;padding:40px 20px;
+  position:relative;
 }
-.admin-lock-icon{font-size:4rem;margin-bottom:8px}
+
+/* Glowing shield badge */
+.admin-lock-badge{
+  position:relative;
+  width:110px;height:110px;
+  margin-bottom:28px;
+}
+.admin-lock-badge-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:2px solid rgba(240,192,64,.25);
+  animation:adminRingPulse 2.5s ease-in-out infinite;
+}
+.admin-lock-badge-ring2{
+  position:absolute;inset:-12px;border-radius:50%;
+  border:1px solid rgba(240,192,64,.1);
+  animation:adminRingPulse 2.5s ease-in-out infinite;
+  animation-delay:.5s;
+}
+@keyframes adminRingPulse{
+  0%,100%{transform:scale(1);opacity:.4}
+  50%{transform:scale(1.06);opacity:1}
+}
+.admin-lock-icon-inner{
+  width:110px;height:110px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, rgba(240,192,64,.2), rgba(11,30,63,.9));
+  border:1.5px solid rgba(240,192,64,.35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:3.2rem;
+  box-shadow:0 0 40px rgba(240,192,64,.15), inset 0 0 30px rgba(11,30,63,.8);
+}
+
+.admin-lock-title{
+  font-family:var(--f-head);font-size:1.6rem;font-weight:900;
+  color:var(--cream);letter-spacing:.04em;
+  margin-bottom:6px;
+}
+.admin-lock-sub{
+  font-family:var(--f-mono);font-size:.65rem;letter-spacing:.22em;
+  color:rgba(240,192,64,.6);text-transform:uppercase;
+  margin-bottom:28px;
+}
+
+/* Login form card */
+.admin-login-card{
+  width:min(380px,92vw);
+  background:rgba(11,30,63,.6);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(240,192,64,.18);
+  border-radius:20px;
+  padding:28px 28px 24px;
+  box-shadow:0 24px 60px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.04);
+}
+
+/* User/pass rows */
+.admin-input-group{
+  position:relative;margin-bottom:14px;
+}
+.admin-input-icon{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  font-size:1rem;opacity:.5;pointer-events:none;
+}
+.admin-f-input{
+  width:100%;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;padding:13px 14px 13px 42px;
+  color:var(--cream);font-family:var(--f-mono);font-size:.9rem;
+  letter-spacing:.06em;box-sizing:border-box;
+  transition:border-color .2s, box-shadow .2s;
+  outline:none;
+}
+.admin-f-input:focus{
+  border-color:rgba(240,192,64,.5);
+  box-shadow:0 0 0 3px rgba(240,192,64,.08);
+}
+
+/* Submit button */
+.admin-submit-btn{
+  width:100%;padding:14px;border-radius:12px;
+  background:linear-gradient(135deg,#D4960A,#F0C040,#D4960A);
+  background-size:200% 100%;
+  border:none;cursor:pointer;
+  font-family:var(--f-head);font-size:.95rem;font-weight:700;
+  letter-spacing:.1em;color:#0B1E3F;
+  transition:all .25s;
+  animation:btnShimmer 3s linear infinite;
+}
+@keyframes btnShimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.admin-submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(212,150,10,.4)}
+.admin-submit-btn:active{transform:translateY(0)}
+
+/* Error shake */
+@keyframes adminShake{
+  0%,100%{transform:translateX(0)}
+  20%,60%{transform:translateX(-8px)}
+  40%,80%{transform:translateX(8px)}
+}
+.admin-login-card.shake{animation:adminShake .4s ease}
+
+/* Users management section */
+.admin-users-table{
+  width:100%;border-collapse:collapse;margin-top:12px;font-size:.85rem;
+}
+.admin-users-table th{
+  font-family:var(--f-mono);font-size:.62rem;letter-spacing:.15em;
+  color:var(--gold);text-transform:uppercase;padding:8px 12px;
+  border-bottom:1px solid rgba(240,192,64,.2);text-align:left;
+}
+.admin-users-table td{
+  padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05);
+  color:var(--cream);vertical-align:middle;
+}
+.admin-users-table tr:hover td{background:rgba(240,192,64,.04)}
+.user-role-badge{
+  display:inline-block;padding:3px 10px;border-radius:20px;
+  font-family:var(--f-mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+}
+.role-piloto{background:rgba(255,107,53,.18);color:#FF6B35;border:1px solid rgba(255,107,53,.3)}
+.role-delegado{background:rgba(21,99,200,.2);color:#60A5FA;border:1px solid rgba(21,99,200,.3)}
+.role-admin{background:rgba(240,192,64,.15);color:var(--gold);border:1px solid rgba(240,192,64,.3)}
+.admin-del-btn{
+  background:none;border:1px solid rgba(239,68,68,.3);color:#F87171;
+  border-radius:6px;padding:4px 10px;cursor:pointer;font-size:.75rem;
+  transition:all .2s;
+}
+.admin-del-btn:hover{background:rgba(239,68,68,.15)}
 
 /* ======================================================= WORKSHOP CARD ======================================================= */
 .mod-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:24px}
@@ -743,9 +900,9 @@ select.f-input{appearance:none;cursor:pointer}
 <!-- Arrival screen -->
 <div id="arrivalScreen">
   <div class="arrival-plane">✈️</div>
-  <div class="arrival-sub">MINUME XVII AIRLINES · VUELO DIPLOMÁTICO</div>
+  <div class="arrival-sub">DELEGAME AIRLINES · VUELO DIPLOMÁTICO</div>
   <div class="arrival-title">¡HEMOS ATERRIZANDO!</div>
-  <div class="arrival-dest">🌐 MINUME XVII</div>
+  <div class="arrival-dest">🌐 DELEGAME</div>
   <div class="arrival-sga" id="arrivalPlayerName">SAMUEL JIMÉNEZ · SGA</div>
   <div style="margin-top:32px;" id="arrivalBtns"></div>
 </div>
@@ -790,15 +947,12 @@ select.f-input{appearance:none;cursor:pointer}
     <img src="./imagenes/logosamuelsg.png" id="loadLogoImg" class="load-logo-img"
       alt="SGA Samuel Jiménez"
       onerror="this.style.display='none';document.getElementById('loadLogoFallback').style.display='flex'">
-    <div id="loadLogoFallback">
-      <span style="font-size:2.2rem">✈️</span>
-      <span style="font-family:var(--f-head);font-size:1rem;color:var(--gold);letter-spacing:.1em">SGA SAMUEL</span>
-    </div>
+    <div id="loadLogoFallback" style="display:none"></div>
   </div>
 
   <!-- UI de carga — abajo del todo -->
   <div class="load-ui">
-    <div class="load-tagline">MINUME XVII · Academia Diplomática · Flight to Diplomacy</div>
+    <div class="load-tagline">DELEGAME · Academia Diplomática · Flight to Diplomacy</div>
 
     <div class="load-bar-container">
       <div class="load-bar-label">
@@ -829,7 +983,7 @@ select.f-input{appearance:none;cursor:pointer}
 <header id="hdr">
   <div class="hdr-brand">
     <span class="hdr-plane">✈️</span>
-    MINUME XVII
+    DELEGAME
   </div>
   <div class="hdr-right">
     <div class="hdr-player" id="hdrPlayer">—</div>
@@ -855,14 +1009,14 @@ select.f-input{appearance:none;cursor:pointer}
           <span class="hls">✦</span>
         </div>
       </div>
-      <img src="./imagenes/logofinal.jpeg" alt="MINUME XVII · Samuel Jiménez SGA"
+      <img src="./imagenes/logofinal.jpeg" alt="DELEGAME · Samuel Jiménez SGA"
         class="home-logo-img-main"
         onerror="this.style.display='none';document.getElementById('homeLogoFallback').style.display='flex'">
       <div id="homeLogoFallback" class="home-logo-fallback" style="display:none">
         <span style="font-size:2.5rem">✈️</span>
         <div>
           <div style="font-family:var(--f-head);font-size:1.2rem;color:var(--gold);letter-spacing:.12em">SAMUEL JIMÉNEZ</div>
-          <div style="font-family:var(--f-mono);font-size:.65rem;color:var(--silver);letter-spacing:.2em;margin-top:4px">SECRETARIO GENERAL ACADÉMICO · MINUME XVII</div>
+          <div style="font-family:var(--f-mono);font-size:.65rem;color:var(--silver);letter-spacing:.2em;margin-top:4px">SECRETARIO GENERAL ACADÉMICO · DELEGAME</div>
         </div>
       </div>
       <!-- Línea decorativa inferior -->
@@ -879,17 +1033,17 @@ select.f-input{appearance:none;cursor:pointer}
 
     <div class="home-tags">
       <span class="tag">🇩🇴 Rep. Dominicana</span>
-      <span class="tag">✈️ MINUME XVII Airlines</span>
+      <span class="tag">✈️ DELEGAME Airlines</span>
       <span class="tag">⚖ Derecho Internacional</span>
       <span class="tag">🌐 Multijugador Real</span>
     </div>
 
-    <div class="eyebrow">Flight to Diplomacy · Programa de Formación</div>
-    <h1 class="big-title">Academia<br>de <em>Diplomáticos</em></h1>
+    <div class="eyebrow">DELEGAME · Programa de Formación</div>
+    <h1 class="big-title" style="text-align:center">Academia<br>de <em>Diplomáticos</em></h1>
     <div class="divider"><div class="diamond"></div></div>
     <p class="body-text">
       Aborda como pasajero o como piloto. Tres módulos de entrenamiento en oratoria, 
-      negociación y protocolo. Cada pregunta correcta te acerca más a MINUME XVII.
+      negociación y protocolo. Cada pregunta correcta te acerca más a DELEGAME.
     </p>
     <div class="home-cta">
       <button class="btn btn-gold btn-lg" onclick="G.go('sModeSelect')">🛫 Abordar →</button>
@@ -898,7 +1052,7 @@ select.f-input{appearance:none;cursor:pointer}
     <div class="airport-grid">
       <div class="airport-cell"><div class="airport-code">SDQ</div><div class="airport-name">Punto de Partida</div></div>
       <div class="airport-cell"><div class="airport-code">✈️</div><div class="airport-name">3 Módulos · 24 Preguntas</div></div>
-      <div class="airport-cell"><div class="airport-code">MUN</div><div class="airport-name">MINUME XVII</div></div>
+      <div class="airport-cell"><div class="airport-code">MUN</div><div class="airport-name">DELEGAME</div></div>
     </div>
   </div>
 </div>
@@ -953,16 +1107,16 @@ select.f-input{appearance:none;cursor:pointer}
     <div class="f-wrap">
       <label class="f-label">Tu Avatar de Delegado</label>
       <div class="avatar-upload-zone" id="avatarZone" onclick="document.getElementById('avatarFileInput').click()">
-        <div class="auz-preview" id="auzPreview">
+        <div class="auz-circle">
           <div class="auz-placeholder" id="auzPlaceholder">
             <div class="auz-icon">📷</div>
             <div class="auz-text">Sube tu foto</div>
-            <div class="auz-sub">o toca para elegir</div>
+            <div class="auz-sub">toca aquí</div>
           </div>
-          <img id="auzImg" class="auz-img" src="" alt="Tu avatar" style="display:none">
-          <canvas id="auzCanvas" style="display:none"></canvas>
+          <img id="auzImg" class="auz-photo" src="" alt="Tu avatar">
+          <div class="auz-edit-overlay">✏️</div>
         </div>
-        <div class="auz-ring" id="auzRing"></div>
+        <div class="auz-ring"></div>
       </div>
       <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="G.handleAvatarUpload(this,'reg')">
       <div class="auz-actions" id="auzActions" style="display:none">
@@ -975,8 +1129,15 @@ select.f-input{appearance:none;cursor:pointer}
       <div class="avatar-grid" id="avatarGrid" style="margin-top:6px"></div>
     </div>
 
-    <label class="f-label">País Representado</label>
-    <div class="country-grid" id="ctryGrid"></div>
+    <div class="f-wrap">
+      <label class="f-label" for="iCountry">🌐 País o Institución Representada</label>
+      <input type="text" id="iCountry" class="f-input" placeholder="Ej: Colombia, España, ONU..."
+        maxlength="40" autocomplete="off"
+        oninput="G.countryInput(this.value)">
+      <div id="countryDupWarn" style="display:none;color:#F87171;font-family:var(--f-mono);font-size:.68rem;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.1);border-radius:6px;border:1px solid rgba(239,68,68,.25)">
+        ⚠️ Este país ya está en la sala — elige uno diferente
+      </div>
+    </div>
 
     <div class="divider" style="margin:24px 0"><div class="diamond"></div></div>
 
@@ -1009,15 +1170,16 @@ select.f-input{appearance:none;cursor:pointer}
     <div class="f-wrap">
       <label class="f-label">Tu Avatar de Delegado</label>
       <div class="avatar-upload-zone" id="avatarZoneJoin" onclick="document.getElementById('avatarFileInputJoin').click()">
-        <div class="auz-preview" id="auzPreviewJoin">
+        <div class="auz-circle">
           <div class="auz-placeholder" id="auzPlaceholderJoin">
             <div class="auz-icon">📷</div>
             <div class="auz-text">Sube tu foto</div>
-            <div class="auz-sub">o toca para elegir</div>
+            <div class="auz-sub">toca aquí</div>
           </div>
-          <img id="auzImgJoin" class="auz-img" src="" alt="Tu avatar" style="display:none">
+          <img id="auzImgJoin" class="auz-photo" src="" alt="Tu avatar">
+          <div class="auz-edit-overlay">✏️</div>
         </div>
-        <div class="auz-ring" id="auzRingJoin"></div>
+        <div class="auz-ring"></div>
       </div>
       <input type="file" id="avatarFileInputJoin" accept="image/*" style="display:none" onchange="G.handleAvatarUpload(this,'join')">
       <div class="auz-actions" id="auzActionsJoin" style="display:none">
@@ -1159,7 +1321,7 @@ select.f-input{appearance:none;cursor:pointer}
   <div class="cert">
     <div class="cert-seal" id="resSeal">🎖</div>
     <div style="text-align:center;margin-bottom:14px">
-      <div class="eyebrow">Certificado de Evaluación · MINUME XVII Airlines</div>
+      <div class="eyebrow">Certificado de Evaluación · DELEGAME Airlines</div>
       <div class="big-title" style="font-size:1.6rem;margin-top:8px" id="resName">—</div>
       <div style="color:var(--silver);font-size:.83rem;margin-top:4px" id="resMod">—</div>
     </div>
@@ -1188,31 +1350,103 @@ select.f-input{appearance:none;cursor:pointer}
 
 <!-- ─── ADMIN PANEL ─── -->
 <div class="screen" id="sAdmin">
-  <div style="margin-top:32px">
-    <div class="eyebrow">Panel de Control</div>
-    <h2 class="big-title">Admin <em>SGA</em></h2>
-    <div class="divider"><div class="diamond"></div></div>
-  </div>
 
-  <!-- Login -->
+  <!-- ═══ ADMIN LOGIN SCREEN ═══ -->
   <div id="adminLock" class="admin-lock">
-    <div class="admin-lock-icon">🔒</div>
-    <h3 style="font-family:var(--f-head);font-size:1.4rem;color:var(--gold)">Acceso Restringido</h3>
-    <p class="body-text">Solo para Samuel SGA · MINUME XVII</p>
-    <div style="width:min(360px,90vw)">
-      <div class="f-wrap">
-        <label class="f-label" for="adminPass">Contraseña de Admin</label>
-        <input type="password" id="adminPass" class="f-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')G.adminLogin()">
-      </div>
-      <button class="btn btn-dawn btn-lg" style="width:100%" onclick="G.adminLogin()">🔓 Ingresar como SGA</button>
+    <!-- Animated badge -->
+    <div class="admin-lock-badge">
+      <div class="admin-lock-badge-ring"></div>
+      <div class="admin-lock-badge-ring2"></div>
+      <div class="admin-lock-icon-inner">🛡️</div>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="G.go('sHome')">← Volver al Terminal</button>
+
+    <div class="admin-lock-title">Panel de Control</div>
+    <div class="admin-lock-sub">DELEGAME · Acceso Restringido</div>
+
+    <div class="admin-login-card" id="adminLoginCard">
+      <!-- Username -->
+      <div class="admin-input-group">
+        <span class="admin-input-icon">👤</span>
+        <input type="text" id="adminUser" class="admin-f-input" placeholder="Usuario"
+          autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('adminPass').focus()">
+      </div>
+      <!-- Password -->
+      <div class="admin-input-group">
+        <span class="admin-input-icon">🔑</span>
+        <input type="password" id="adminPass" class="admin-f-input" placeholder="Contraseña"
+          autocomplete="current-password" onkeydown="if(event.key==='Enter')G.adminLogin()">
+      </div>
+      <button class="admin-submit-btn" onclick="G.adminLogin()">INGRESAR AL PANEL →</button>
+    </div>
+
+    <button class="btn btn-ghost btn-sm" style="margin-top:20px" onclick="G.go('sHome')">← Volver</button>
   </div>
 
-  <!-- Admin content (hidden until login) -->
+  <!-- ═══ ADMIN DASHBOARD (after login) ═══ -->
   <div id="adminContent" style="display:none">
-    <div class="admin-panel">
-      <div class="admin-title">✈️ Control de Talleres Disponibles</div>
+    <div style="margin-top:24px;margin-bottom:8px">
+      <div class="eyebrow">Panel de Control</div>
+      <h2 class="big-title">Admin <em>SGA</em></h2>
+      <div class="divider"><div class="diamond"></div></div>
+    </div>
+
+    <!-- Gestión de Usuarios — SOLO visible para Samuel (master admin) -->
+    <div class="admin-panel" id="adminUserSection" style="display:none">
+      <div class="admin-title">👥 Gestión de Usuarios</div>
+      <p style="font-size:.82rem;color:var(--silver);margin-bottom:14px">
+        Crea usuarios con contraseña. Los delegados ingresan con su usuario y clave asignados.
+      </p>
+
+      <!-- Create user form -->
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:16px">
+        <div>
+          <label class="f-label">Usuario</label>
+          <input type="text" id="newUserName" class="f-input" placeholder="Ej: maria.garcia" maxlength="30"
+            style="margin-top:4px">
+        </div>
+        <div>
+          <label class="f-label">Contraseña</label>
+          <div style="position:relative">
+            <input type="text" id="newUserPass" class="f-input" placeholder="Ej: delegado2024" maxlength="30"
+              style="margin-top:4px;padding-right:40px">
+            <button onclick="G.genPass()" title="Generar contraseña"
+              style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;opacity:.6">🎲</button>
+          </div>
+        </div>
+        <div>
+          <label class="f-label">Rol</label>
+          <select id="newUserRole" class="f-input" style="margin-top:4px">
+            <option value="delegado">Delegado</option>
+            <option value="piloto">Piloto</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="G.createUser()" style="width:100%;margin-bottom:16px">
+        ＋ Crear Usuario
+      </button>
+
+      <!-- Users table -->
+      <div id="usersTableWrap">
+        <table class="admin-users-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Contraseña</th>
+              <th>Rol</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+        <p id="noUsersMsg" style="text-align:center;color:var(--silver);font-size:.82rem;padding:20px">
+          No hay usuarios creados. Agrega el primero arriba.
+        </p>
+      </div>
+    </div>
+
+    <!-- Talleres -->
+    <div class="admin-panel" style="margin-top:16px">
+      <div class="admin-title">✈️ Control de Talleres</div>
       <div id="workshopToggles"></div>
     </div>
 
@@ -1236,8 +1470,8 @@ select.f-input{appearance:none;cursor:pointer}
     </div>
 
     <div class="btn-group" style="margin-top:20px">
-      <button class="btn btn-ghost" onclick="G.adminLogout()">🔒 Cerrar Sesión Admin</button>
-      <button class="btn btn-ghost" onclick="G.go('sHome')">← Volver al Terminal</button>
+      <button class="btn btn-ghost" onclick="G.adminLogout()">🔒 Cerrar Sesión</button>
+      <button class="btn btn-ghost" onclick="G.go('sHome')">← Terminal</button>
     </div>
   </div>
 </div>
@@ -1248,7 +1482,7 @@ select.f-input{appearance:none;cursor:pointer}
 "use strict";
 
 /* ============================================================
-   FIREBASE CONFIG — SAMUELSGA · MINUME XVII
+   FIREBASE CONFIG — SAMUELSGA · DELEGAME
    Proyecto: samuelsga-2f0df
 ============================================================ */
 const FB_CONFIG = {
@@ -1262,11 +1496,18 @@ const FB_CONFIG = {
   measurementId: "G-ZMP8MZW8RD"
 };
 
+/* ── IMGBB CONFIG — Almacenamiento secundario de avatares
+   Primario: Firebase Storage  |  Respaldo: ImgBB
+   ─────────────────────────────────────────────── */
+const IMGBB_API_KEY = '7929e21c9bfeacd37823499f921024f3';
+
 let db = null;
+let storage = null;
 try {
   firebase.initializeApp(FB_CONFIG);
-  db = firebase.database();
-  console.log("✅ Firebase SAMUELSGA conectado — Multijugador activo");
+  db      = firebase.database();
+  storage = firebase.storage();
+  console.log("✅ Firebase SAMUELSGA conectado — DB + Storage activos");
 } catch(e) { console.warn("Firebase error:", e.message); }
 
 /* ============================================================ AVATARS ============================================================ */
@@ -1289,13 +1530,7 @@ const PASSENGER_AVATARS = Object.keys(PIXEL_AVATARS).filter(k=>!PIXEL_AVATARS[k]
 const PILOT_AVATARS = Object.keys(PIXEL_AVATARS).filter(k=>PIXEL_AVATARS[k].isPilot);
 
 /* ============================================================ COUNTRIES ============================================================ */
-const COUNTRIES = [
-  "Alemania","Argentina","Brasil","Canadá","Chile","China",
-  "Colombia","Cuba","España","Estados Unidos","Francia",
-  "India","Israel","Italia","Japón","México","Países Bajos",
-  "Palestina","Perú","Reino Unido","Rep. Dominicana",
-  "Rusia","Sudáfrica","Venezuela"
-];
+// COUNTRIES array removed — using free text input
 
 /* ============================================================ STATE ============================================================ */
 const S = {
@@ -1303,7 +1538,7 @@ const S = {
   mode: 'solo',
   room: null,
   playerId: null,
-  adminLoggedIn: false,
+  adminLoggedIn: false, adminUser: '', adminRole: '',
   game: {
     mod:'', qs:[], cur:0,
     score:0, correct:0, wrong:0,
@@ -1364,8 +1599,22 @@ const getQDB = () => {
   return {...BASE_QDB, ...custom};
 };
 
-const getAdminConfig = () => JSON.parse(localStorage.getItem('adminConfig') || '{}');
-const saveAdminConfig = (cfg) => localStorage.setItem('adminConfig', JSON.stringify(cfg));
+const getAdminConfig = () => {
+  // Try Firebase first (async not possible here, use localStorage as cache)
+  return JSON.parse(localStorage.getItem('adminConfig') || '{}');
+};
+const saveAdminConfig = (cfg) => {
+  localStorage.setItem('adminConfig', JSON.stringify(cfg));
+  if(db) db.ref('delegame/adminConfig').set(cfg);
+};
+// Sync adminConfig from Firebase on load
+const syncAdminConfig = () => {
+  if(!db) return;
+  db.ref('delegame/adminConfig').once('value').then(s => {
+    if(s.val()) localStorage.setItem('adminConfig', JSON.stringify(s.val()));
+  });
+};
+setTimeout(syncAdminConfig, 1500);
 
 /* ============================================================ HELPERS ============================================================ */
 const shuffle = arr => { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; };
@@ -1408,88 +1657,72 @@ const CIRC    = 144.5;
   resize();P=Array.from({length:80},mk);draw();
 })();
 
-/* ============================================================ LOADING + VIDEO (sincronizado) ============================================================ */
+/* ============================================================ LOADING + VIDEO ============================================================ */
 (() => {
-  const fill   = document.getElementById('loadFill');
-  const glow   = document.getElementById('loadGlow');
-  const pct    = document.getElementById('loadPct');
-  const lbl    = document.getElementById('loadLabel');
-  const st     = document.getElementById('loadStatus');
-  const vid    = document.getElementById('introVid');
-  const dots   = document.querySelectorAll('.load-dot');
-
-  // Total de tiempo del loading en ms (ajusta para sincronizar con duración del video)
-  const TOTAL_LOAD_MS = 5600;
-  const startTime = Date.now();
+  const fill  = document.getElementById('loadFill');
+  const glow  = document.getElementById('loadGlow');
+  const pct   = document.getElementById('loadPct');
+  const lbl   = document.getElementById('loadLabel');
+  const st    = document.getElementById('loadStatus');
+  const vid   = document.getElementById('introVid');
+  const dots  = document.querySelectorAll('.load-dot');
 
   const steps = [
-    {p:10, l:'Revisando pasaportes…',           s:'Verificando documentación de viaje', dot:0},
-    {p:22, l:'Cargando módulos diplomáticos…',  s:'Instalando talleres de entrenamiento', dot:1},
-    {p:38, l:'Compilando escenarios…',           s:'Preparando sala de sesiones', dot:2},
-    {p:55, l:'Conectando Firebase…',             s:'Inicializando multijugador en tiempo real', dot:3},
-    {p:72, l:'Preparando pista de despegue…',    s:'Comprobando sistemas de vuelo', dot:4},
-    {p:88, l:'Abrochando cinturones…',           s:'Casi listo para el despegue', dot:5},
-    {p:100,l:'¡Pista despejada! ✓',             s:'Bienvenido a bordo · MINUME XVII Airlines', dot:6}
+    {p:10, l:'Iniciando motores…',         s:'Encendiendo sistemas de DELEGAME',    dot:0, ms:500},
+    {p:22, l:'Revisando pasaportes…',      s:'Verificando documentación de viaje',  dot:1, ms:800},
+    {p:38, l:'Cargando módulos…',          s:'Instalando talleres de entrenamiento',dot:2, ms:750},
+    {p:52, l:'Compilando escenarios…',     s:'Preparando sala de sesiones',         dot:3, ms:700},
+    {p:68, l:'Conectando Firebase…',       s:'Inicializando multijugador en vivo',  dot:4, ms:800},
+    {p:84, l:'Preparando pista…',          s:'Comprobando sistemas de vuelo',       dot:5, ms:700},
+    {p:100,l:'¡Pista despejada! ✓',       s:'Bienvenido a DELEGAME',               dot:6, ms:600},
   ];
 
-  const updateDots = (activeDot) => {
+  const updateDots = (a) => {
     dots.forEach((d,i) => {
       d.classList.remove('active','done');
-      if(i < activeDot) d.classList.add('done');
-      else if(i === activeDot) d.classList.add('active');
+      if(i < a) d.classList.add('done');
+      else if(i === a) d.classList.add('active');
     });
   };
 
-  const setProgress = (p, dot, labelText, statusText) => {
-    fill.style.width = p + '%';
-    if(glow) glow.style.width = p + '%';
-    pct.textContent = p + '%';
-    lbl.textContent = labelText;
-    st.textContent  = statusText;
-    updateDots(dot);
-
-    // Sincronizar video: avanzar al % proporcional del video
-    if(vid && vid.duration && !isNaN(vid.duration)) {
-      vid.currentTime = (p / 100) * vid.duration;
+  // VIDEO: play straight, muted. No currentTime manipulation = no freezing.
+  const startVid = () => {
+    vid.muted  = true;
+    vid.loop   = true;
+    const p = vid.play();
+    if(p !== undefined){
+      p.then(() => {
+        vid.style.transition = 'opacity 1.2s ease';
+        vid.style.opacity = '1';
+      }).catch(() => {
+        vid.style.opacity = '0.25'; // show first frame at least
+      });
     }
   };
 
-  // Arrancar video desde el primer frame, silenciado
-  const startVideo = () => {
-    vid.currentTime = 0;
-    vid.play().then(() => {
-      vid.classList.add('playing');
-      // Pausar inmediatamente — lo controlamos manualmente con currentTime
-      vid.pause();
-    }).catch(() => {});
-  };
-
-  // Ejecutar steps con timing proporcional al TOTAL_LOAD_MS
-  const stepDurations = [0];
-  steps.forEach((s,i) => {
-    const prev = steps[i-1]?.p || 0;
-    stepDurations.push(Math.round(((s.p - prev) / 100) * TOTAL_LOAD_MS));
+  // Run loading steps in sequence via cumulative setTimeout
+  let elapsed = 0;
+  steps.forEach((step) => {
+    elapsed += step.ms;
+    setTimeout(() => {
+      fill.style.width = step.p + '%';
+      if(glow) glow.style.width = step.p + '%';
+      pct.textContent = step.p + '%';
+      lbl.textContent = step.l;
+      st.textContent  = step.s;
+      updateDots(step.dot);
+      if(step.p === 100) setTimeout(() => G.endLoad(), 700);
+    }, elapsed);
   });
 
-  let i = 0;
-  const tick = () => {
-    if(i >= steps.length) {
-      updateDots(6);
-      setTimeout(() => G.endLoad(), 800);
-      return;
-    }
-    const step = steps[i];
-    setProgress(step.p, step.dot, step.l, step.s);
-    const duration = Math.max(400, stepDurations[i+1] || 600);
-    i++;
-    setTimeout(tick, duration + Math.random() * 120);
-  };
-
-  // Iniciar video y loading simultáneamente
-  setTimeout(() => {
-    startVideo();
-    tick();
-  }, 300);
+  // Start video on page load
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', startVid);
+  } else {
+    startVid();
+  }
+  // Belt & suspenders: retry on window load
+  window.addEventListener('load', () => { if(vid.paused) startVid(); });
 })();
 
 /* ============================================================ MAIN OBJECT ============================================================ */
@@ -1498,20 +1731,33 @@ const G = {
   activateSound(){
     const vid = document.getElementById('introVid');
     if(vid){
-      vid.muted = false;
-      vid.volume = 0.85;
+      // If video isn't playing yet (autoplay was blocked), start it now with sound
+      if(vid.paused){
+        vid.muted  = false;
+        vid.volume = 0.9;
+        vid.play().then(() => {
+          vid.classList.add('playing');
+        }).catch(()=>{});
+      } else {
+        // Already playing muted — just unmute
+        vid.muted  = false;
+        vid.volume = 0.9;
+      }
     }
     const btn = document.getElementById('soundBtn');
     if(btn){
-      btn.style.animation='none';
-      btn.querySelector('.sound-btn-text').textContent='🔊 Sonido Activo';
-      btn.querySelector('.sound-btn-sub').textContent='Audio del vuelo activado';
-      btn.querySelector('.sound-btn-inner').style.borderColor='rgba(34,197,94,.6)';
-      btn.querySelector('.sound-btn-inner').style.background='rgba(34,197,94,.12)';
-      btn.querySelector('.sound-btn-text').style.color='#86EFAC';
-      setTimeout(()=> btn.classList.remove('show'), 1500);
+      const inner = btn.querySelector('.sound-btn-inner');
+      const txt   = btn.querySelector('.sound-btn-text');
+      const sub   = btn.querySelector('.sound-btn-sub');
+      if(inner){ inner.style.borderColor='rgba(34,197,94,.7)'; inner.style.background='rgba(34,197,94,.15)'; }
+      if(txt)  { txt.textContent = '🔊 Sonido Activo'; txt.style.color='#86EFAC'; }
+      if(sub)  { sub.textContent = 'Audio activado'; }
+      // Animate eq bars faster to show audio is on
+      btn.querySelectorAll('.eq-bar').forEach(b => { b.style.animationDuration = '0.3s'; });
+      setTimeout(() => btn.style.opacity = '0', 1800);
+      setTimeout(() => btn.style.display = 'none', 2200);
     }
-    this.toast('🔊 Sonido activado','success',2000);
+    this.toast('🔊 ¡Sonido activado!', 'success', 2000);
   },
 
   endLoad(){
@@ -1604,105 +1850,146 @@ const G = {
   },
 
   /* ── AVATAR PHOTO UPLOAD ── */
+  /* ── MASTER ADMIN CHECK — solo Samuel puede ver Gestión de Usuarios ── */
+  _isMasterAdmin(){
+    return S.adminUser === 'Samuel SGA';
+  },
+
+  /* ── IMGBB UPLOAD — respaldo cuando Firebase Storage falla ── */
+  _uploadToImgBB(base64Data, cb){
+    const b64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+    const form = new FormData();
+    form.append('key', IMGBB_API_KEY);
+    form.append('image', b64);
+    fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: form })
+      .then(r => r.json())
+      .then(data => {
+        if(data.success && data.data?.url) cb(null, data.data.url);
+        else cb(new Error('ImgBB: ' + JSON.stringify(data)), null);
+      })
+      .catch(err => cb(err, null));
+  },
+
   handleAvatarUpload(input, ctx){
     const file = input.files[0];
     if(!file) return;
 
-    const isReg = ctx === 'reg';
-    const imgEl      = document.getElementById(isReg ? 'auzImg' : 'auzImgJoin');
-    const placeholder= document.getElementById(isReg ? 'auzPlaceholder' : 'auzPlaceholderJoin');
-    const preview    = document.getElementById(isReg ? 'auzPreview' : 'auzPreviewJoin');
-    const actions    = document.getElementById(isReg ? 'auzActions' : 'auzActionsJoin');
+    const isReg   = ctx === 'reg';
+    const imgEl   = document.getElementById(isReg ? 'auzImg'    : 'auzImgJoin');
+    const actions = document.getElementById(isReg ? 'auzActions': 'auzActionsJoin');
+    const zone    = document.getElementById(isReg ? 'avatarZone': 'avatarZoneJoin');
+    input.value = '';
 
+    // Show upload indicator
+    zone.classList.remove('has-photo');
+    const placeholder = zone.querySelector('.auz-placeholder');
+    if(placeholder) placeholder.innerHTML = '<div style="font-size:1.4rem;animation:spin 0.8s linear infinite">⏳</div><div style="font-family:var(--f-mono);font-size:.55rem;color:var(--gold);margin-top:4px">Subiendo…</div>';
+
+    const applyURL = (url) => {
+      if(!url) return;
+      imgEl.src = url;
+      imgEl.style.removeProperty('display');
+      zone.classList.add('has-photo');
+      if(actions) actions.style.display = 'flex';
+      S.player.avatar    = url;
+      S.player.avatarKey = 'photo';
+      zone.classList.remove('flash'); void zone.offsetWidth; zone.classList.add('flash');
+      setTimeout(() => zone.classList.remove('flash'), 700);
+    };
+
+    // Step 1: Show preview instantly from local file (data URL)
     const reader = new FileReader();
+    reader.onerror = () => {
+      if(placeholder) placeholder.innerHTML = '<div class="auz-icon">📷</div><div class="auz-text">Sube tu foto</div><div class="auz-sub">toca aquí</div>';
+      this.toast('❌ Error al leer la imagen', 'error', 3000);
+    };
     reader.onload = (e) => {
-      const originalSrc = e.target.result;
+      const raw = e.target.result;
+      // Show locally RIGHT AWAY for instant feedback
+      applyURL(raw);
+      this.toast('📸 Foto lista localmente', 'info', 1500);
 
-      // Create a canvas to crop to circle and resize to 128x128
-      const canvas = document.createElement('canvas');
-      canvas.width = 128; canvas.height = 128;
-      const ctx2 = canvas.getContext('2d');
-
-      const img = new Image();
-      img.onload = () => {
-        // Crop square from center
-        const size = Math.min(img.width, img.height);
-        const sx   = (img.width  - size) / 2;
-        const sy   = (img.height - size) / 2;
-
-        // Clip to circle
-        ctx2.beginPath();
-        ctx2.arc(64, 64, 64, 0, Math.PI * 2);
-        ctx2.closePath();
-        ctx2.clip();
-
-        // Draw image scaled to 128x128
-        ctx2.drawImage(img, sx, sy, size, size, 0, 0, 128, 128);
-
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-
-        // Update UI
-        imgEl.src = dataUrl;
-        imgEl.style.display = 'block';
-        placeholder.style.display = 'none';
-        preview.classList.add('has-photo');
-        actions.style.display = 'flex';
-
-        // Save to state
-        S.player.avatar     = dataUrl;
-        S.player.avatarKey  = 'photo';
-        S.player.avatarName = S.player.name || 'Delegado';
-
-        // Flash the ring with gold border to confirm upload
-        const zone = document.getElementById(isReg ? 'avatarZone' : 'avatarZoneJoin');
-        zone.style.animation = 'none';
-        void zone.offsetWidth;
-        zone.style.animation = 'avatarConfirm .6s ease';
-
-        this.toast('✅ Avatar listo — ¡te ves diplomático!', 'success', 2500);
+      // Step 2: Comprimir con canvas y subir (Firebase → ImgBB como respaldo)
+      const compressImage = (src, onDone) => {
+        const tmpImg = new Image();
+        tmpImg.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 300; canvas.height = 300;
+            const c = canvas.getContext('2d');
+            const sz = Math.min(tmpImg.naturalWidth, tmpImg.naturalHeight);
+            const ox = (tmpImg.naturalWidth  - sz) / 2;
+            const oy = (tmpImg.naturalHeight - sz) / 2;
+            c.drawImage(tmpImg, ox, oy, sz, sz, 0, 0, 300, 300);
+            onDone(canvas.toDataURL('image/jpeg', 0.82));
+          } catch(e){ onDone(src); }
+        };
+        tmpImg.onerror = () => onDone(src);
+        tmpImg.src = src;
       };
-      img.src = originalSrc;
+
+      // RESPALDO: subir a ImgBB si Firebase falla o no está disponible
+      const tryImgBB = (compressedData) => {
+        this.toast('☁️ Sincronizando con ImgBB…', 'info', 2000);
+        this._uploadToImgBB(compressedData, (err, url) => {
+          if(!err && url){
+            applyURL(url);
+            S.player.avatar = url;
+            this.toast('✅ Foto subida a ImgBB 🖼️ — visible en todos los dispositivos', 'success', 3500);
+          } else {
+            console.warn('ImgBB también falló:', err?.message);
+            this.toast('⚠️ Foto guardada solo localmente (sin conexión)', 'warn', 4000);
+          }
+        });
+      };
+
+      // PRIMARIO: Firebase Storage
+      const tryFirebase = (compressedData) => {
+        if(!storage){ tryImgBB(compressedData); return; }
+        fetch(compressedData).then(r => r.blob()).then(blob => {
+          const uid  = S.playerId || S.player.name?.replace(/\s+/g,'_') || ('u_' + Date.now());
+          const ref  = storage.ref(`avatars/${uid}.jpg`);
+          const task = ref.put(blob, { contentType: 'image/jpeg' });
+          task.on('state_changed', null,
+            (err) => {
+              console.warn('⚠️ Firebase Storage falló → usando ImgBB:', err.message);
+              this.toast('⚠️ Firebase no disponible, usando ImgBB…', 'warn', 2000);
+              tryImgBB(compressedData);
+            },
+            () => {
+              task.snapshot.ref.getDownloadURL().then(url => {
+                applyURL(url);
+                S.player.avatar = url;
+                this.toast('✅ ¡Foto sincronizada en Firebase 🔥 — visible en todos los dispositivos!', 'success', 3000);
+              }).catch(() => tryImgBB(compressedData));
+            }
+          );
+        }).catch(() => tryImgBB(compressedData));
+      };
+
+      compressImage(raw, (compressed) => tryFirebase(compressed));
     };
     reader.readAsDataURL(file);
-    // Clear input so same file can be re-selected
-    input.value = '';
   },
 
   clearAvatar(ctx){
-    const isReg = ctx === 'reg';
-    const imgEl      = document.getElementById(isReg ? 'auzImg' : 'auzImgJoin');
-    const placeholder= document.getElementById(isReg ? 'auzPlaceholder' : 'auzPlaceholderJoin');
-    const preview    = document.getElementById(isReg ? 'auzPreview' : 'auzPreviewJoin');
-    const actions    = document.getElementById(isReg ? 'auzActions' : 'auzActionsJoin');
+    const isReg  = ctx === 'reg';
+    const imgEl  = document.getElementById(isReg ? 'auzImg'    : 'auzImgJoin');
+    const actions= document.getElementById(isReg ? 'auzActions': 'auzActionsJoin');
+    const zone   = document.getElementById(isReg ? 'avatarZone': 'avatarZoneJoin');
     imgEl.src = '';
     imgEl.style.display = 'none';
-    placeholder.style.display = 'flex';
-    preview.classList.remove('has-photo');
-    actions.style.display = 'none';
-    S.player.avatar = '';
+    zone.classList.remove('has-photo', 'flash');
+    if(actions) actions.style.display = 'none';
+    S.player.avatar    = '';
     S.player.avatarKey = 'd0';
-    // Reset to first pixel avatar
+    // Re-select first pixel art avatar
     const grid = document.getElementById(isReg ? 'avatarGrid' : 'avatarGridJoin');
-    if(grid){
-      const first = grid.querySelector('.av-btn');
-      if(first) first.click();
-    }
+    if(grid){ const first = grid.querySelector('.av-btn'); if(first) first.click(); }
   },
 
-  /* ── COUNTRY GRID ── */
-  _buildCountries(){
-    const g = document.getElementById('ctryGrid');
-    if(!g || g.children.length) return;
-    COUNTRIES.forEach(c=>{
-      const b = document.createElement('button');
-      b.className='ctry-btn'; b.textContent=c;
-      b.onclick=()=>{
-        g.querySelectorAll('.ctry-btn').forEach(x=>x.classList.remove('sel'));
-        b.classList.add('sel'); S.player.country=c;
-      };
-      g.appendChild(b);
-    });
-  },
+  /* ── COUNTRY GRID removed — free text input now ── */
+  _buildCountries(){ /* no-op — uses iCountry free text input */ },
 
   /* ── DIFF ── */
   setDiff(d,el){
@@ -1711,10 +1998,28 @@ const G = {
   },
 
   /* ── REGISTER ── */
+  countryInput(val){
+    S.player.country = val.trim();
+    // If in a room, check for duplicates in real time
+    const warn = document.getElementById('countryDupWarn');
+    if(!warn) return;
+    if(S.room && S.mode==='host' && db && val.trim().length > 1){
+      db.ref(`rooms/${S.room}/players`).once('value').then(snap => {
+        const players = snap.val() || {};
+        const dup = Object.values(players).some(p =>
+          p.country && p.country.toLowerCase() === val.trim().toLowerCase()
+        );
+        warn.style.display = dup ? 'block' : 'none';
+      });
+    } else { warn.style.display = 'none'; }
+  },
+
   register(){
-    const name = document.getElementById('iName').value.trim();
+    const name    = document.getElementById('iName').value.trim();
+    const country = document.getElementById('iCountry')?.value.trim() || S.player.country;
     if(!name){ this.toast('Ingresa tu nombre de delegado.','warn'); return; }
-    if(!S.player.country){ this.toast('Selecciona tu país.','warn'); return; }
+    if(!country){ this.toast('Escribe tu país o institución.','warn'); return; }
+    S.player.country = country;
     S.player.name  = name;
     S.player.title = document.getElementById('iTitle').value.trim() || 'Delegado';
     const hdrAv = S.player.avatar && S.player.avatar.startsWith('data:')
@@ -1731,14 +2036,26 @@ const G = {
     const name  = document.getElementById('jName').value.trim();
     const ctry  = document.getElementById('jCountry').value.trim();
     const code  = document.getElementById('jCode').value.trim().toUpperCase();
-    const av    = S.player.avatar || '👨‍💼';
+    const av    = S.player.avatar || '';
     if(!name||!ctry||!code){ this.toast('Completa todos los campos.','warn'); return; }
     if(code.length!==6){ this.toast('El código debe tener 6 caracteres.','warn'); return; }
-    S.player.name=name; S.player.country=ctry; S.mode='player'; S.room=code; S.playerId=randId();
-    if(!db){ this.toast('⚠ Firebase no configurado. Ve a la Guía de Instalación más abajo.','warn',8000); return; }
+    if(!db){ this.toast('⚠ Firebase no configurado.','warn',5000); return; }
     db.ref(`rooms/${code}`).once('value').then(snap=>{
-      if(!snap.exists()){ this.toast('Sala no encontrada. Verifica el código.','error'); return; }
-      db.ref(`rooms/${code}/players/${S.playerId}`).set({name,country:ctry,avatar:av,score:0,streak:0});
+      if(!snap.exists()){ this.toast('❌ Sala no encontrada. Verifica el código.','error'); return; }
+      // Check for duplicate country in this room
+      const players = snap.val()?.players || {};
+      const dupCountry = Object.values(players).find(p =>
+        p.country && p.country.toLowerCase() === ctry.toLowerCase()
+      );
+      if(dupCountry){
+        this.toast(`❌ "${ctry}" ya está en esta sala. Elige otro país o institución.`, 'error', 5000);
+        // Highlight the country field
+        const el = document.getElementById('jCountry');
+        if(el){ el.style.borderColor='#EF4444'; setTimeout(()=>el.style.borderColor='',3000); }
+        return;
+      }
+      S.player.name=name; S.player.country=ctry; S.mode='player'; S.room=code; S.playerId=randId();
+      db.ref(`rooms/${code}/players/${S.playerId}`).set({name,country:ctry,avatar:av,score:0,streak:0,avatarKey:S.player.avatarKey||'d0'});
       document.getElementById('wpRoomCode').textContent=code;
       this.go('sWaitingPlayer');
       this._listenAsPlayer();
@@ -1811,8 +2128,9 @@ const G = {
     el.innerHTML='';
     list.forEach((p,i)=>{
       const isPilot=p.id==='HOST'||i===0&&p.avatarKey&&PIXEL_AVATARS[p.avatarKey]?.isPilot;
-      const avatarHTML = p.avatar && p.avatar.startsWith('data:')
-        ? `<img src="${'${p.avatar}'}" style="width:100%;height:100%;border-radius:50%;image-rendering:pixelated;" alt="avatar">`
+      const isImgURL = p.avatar && (p.avatar.startsWith('data:') || p.avatar.startsWith('http'));
+      const avatarHTML = isImgURL
+        ? `<img src="${p.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="avatar" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\\'font-size:1.3rem\\'>👤</span>'">`
         : `<span style="font-size:1.3rem">${p.avatar||'👤'}</span>`;
       const d=document.createElement('div');
       d.className='pax-row';
@@ -1892,7 +2210,7 @@ const G = {
       d.className='lb-row';
       d.innerHTML=`
         <div class="lb-rank ${i<3?'top'+(i+1):''}">${medals[i]||i+1}</div>
-        <div class="lb-avatar">${p.avatar&&p.avatar.startsWith('data:')?`<img src="${p.avatar}" style="width:24px;height:24px;border-radius:50%;image-rendering:pixelated;">`:p.avatar||'👤'}</div>
+        <div class="lb-avatar">${p.avatar&&(p.avatar.startsWith('data:')||p.avatar.startsWith('http'))?`<img src="${p.avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`:p.avatar||'👤'}</div>
         <div class="lb-name">${p.name||'—'}</div>
         <div class="lb-country">${p.country||''}</div>
         <div class="lb-score">${(p.score||0).toLocaleString()}</div>`;
@@ -2089,7 +2407,7 @@ const G = {
     const pct=Math.round((g.correct/g.qs.length)*100);
     const qdb=getQDB();
     const modName=qdb[g.mod]?.name||g.mod;
-    const resAv = S.player.avatar && S.player.avatar.startsWith('data:')
+    const resAv = S.player.avatar && (S.player.avatar.startsWith('data:') || S.player.avatar.startsWith('http'))
       ? `<img src="${S.player.avatar}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:2px solid var(--gold);">`
       : (S.player.avatar ? S.player.avatar + ' ' : '');
     document.getElementById('resName').innerHTML = resAv + S.player.name;
@@ -2100,7 +2418,7 @@ const G = {
     document.getElementById('resPct').textContent=pct+'%';
 
     const grades=[
-      {min:90,seal:'🏛',t:'Secretario General — Distinción Excepcional',d:'Dominio técnico y analítico de nivel superior. Capacidad demostrada para actuar bajo presión en escenarios de alta complejidad. Listo para liderar delegaciones internacionales en MINUME XVII.'},
+      {min:90,seal:'🏛',t:'Secretario General — Distinción Excepcional',d:'Dominio técnico y analítico de nivel superior. Capacidad demostrada para actuar bajo presión en escenarios de alta complejidad. Listo para liderar delegaciones internacionales en DELEGAME.'},
       {min:75,seal:'🎖',t:'Embajador de Primera Clase',d:'Sólida comprensión de los principios y procedimientos diplomáticos. Con práctica adicional en los escenarios más desafiantes, alcanzarás el nivel de excelencia.'},
       {min:60,seal:'⚖',t:'Diplomático Acreditado',d:'Captas los conceptos fundamentales y aplicas estrategias básicas. Identifica tus puntos débiles en procedimiento parlamentario y negociación avanzada.'},
       {min:0, seal:'📚',t:'Attaché en Formación',d:'La diplomacia se perfecciona con estudio constante. Repasa la Carta ONU, la Convención de Viena y bibliografía básica de negociación multilateral.'}
@@ -2126,7 +2444,7 @@ const G = {
             d.className='lb-row';
             d.innerHTML=`
               <div class="lb-rank ${i<3?'top'+(i+1):''}">${medals[i]||i+1}</div>
-              <div class="lb-avatar">${p.avatar&&p.avatar.startsWith('data:')?`<img src="${p.avatar}" style="width:24px;height:24px;border-radius:50%;image-rendering:pixelated;">`:p.avatar||'👤'}</div>
+              <div class="lb-avatar">${p.avatar&&(p.avatar.startsWith('data:')||p.avatar.startsWith('http'))?`<img src="${p.avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`:p.avatar||'👤'}</div>
               <div class="lb-name">${p.name||'—'}</div>
               <div class="lb-country">${p.country||''}</div>
               <div class="lb-score">${(p.score||0).toLocaleString()}</div>`;
@@ -2175,6 +2493,7 @@ const G = {
       document.getElementById('adminLock').style.display='none';
       document.getElementById('adminContent').style.display='block';
       this._renderAdminContent();
+      if(this._isMasterAdmin()) this._renderUsersTable();
     } else {
       document.getElementById('adminLock').style.display='flex';
       document.getElementById('adminContent').style.display='none';
@@ -2182,26 +2501,127 @@ const G = {
   },
 
   adminLogin(){
-    const pw=document.getElementById('adminPass').value;
-    // Contraseña configurable — predeterminada: samuel2024
-    if(pw==='samuel2024'||pw==='samuelsga'){
-      S.adminLoggedIn=true;
-      document.getElementById('adminLock').style.display='none';
-      document.getElementById('adminContent').style.display='block';
+    const user = (document.getElementById('adminUser')?.value || '').trim().toLowerCase();
+    const pw   = (document.getElementById('adminPass')?.value || '').trim();
+    const card = document.getElementById('adminLoginCard');
+
+    // Check master SGA credentials
+    const masterOk = (pw === 'samuel2024' || pw === 'samuelsga') &&
+                     (user === '' || user === 'samuel' || user === 'sga' || user === 'admin');
+    
+    // Check created user accounts (async)
+    const doLogin = (userMatch) => {
+    if(masterOk || userMatch){
+      S.adminLoggedIn = true;
+      S.adminUser     = userMatch ? userMatch.name : 'Samuel SGA';
+      S.adminRole     = userMatch ? userMatch.role  : 'admin';
+      document.getElementById('adminLock').style.display    = 'none';
+      document.getElementById('adminContent').style.display = 'block';
       this._renderAdminContent();
-      this.toast('✈️ Bienvenido, SGA Samuel Jiménez','success',3000);
+      if(this._isMasterAdmin()) this._renderUsersTable();
+      const welcomeName = document.getElementById('adminWelcomeName');
+      if(welcomeName) welcomeName.textContent = S.adminUser;
+      this.toast(`🛡️ Bienvenido, ${S.adminUser}`, 'success', 3000);
     } else {
-      this.toast('Contraseña incorrecta','error');
+      if(card){ card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),500); }
+      if(document.getElementById('adminPass')) document.getElementById('adminPass').value = '';
+      this.toast('❌ Usuario o contraseña incorrectos', 'error', 3000);
     }
+    }; // end doLogin
+    // If masterOk, skip async lookup
+    if(masterOk){ doLogin(null); return; }
+    this._getUsers(users => {
+      doLogin(users.find(u => u.name.toLowerCase() === user && u.pass === pw));
+    });
   },
 
   adminLogout(){
-    S.adminLoggedIn=false;
-    this.toast('Sesión admin cerrada','info');
+    S.adminLoggedIn = false;
+    S.adminUser     = '';
+    document.getElementById('adminLock').style.display    = 'flex';
+    document.getElementById('adminContent').style.display = 'none';
+    if(document.getElementById('adminUser'))  document.getElementById('adminUser').value  = '';
+    if(document.getElementById('adminPass'))  document.getElementById('adminPass').value  = '';
+    this.toast('🔒 Sesión cerrada', 'info', 2000);
     this.go('sHome');
   },
 
+  /* ── USER MANAGEMENT ── */
+  _getUsers(cb){
+    if(db){
+      db.ref('delegame/users').once('value').then(s => cb(s.val() ? Object.values(s.val()) : []));
+    } else { cb(JSON.parse(localStorage.getItem('delegame_users')||'[]')); }
+  },
+  _saveUsers(users){
+    const obj = {};
+    users.forEach(u => { obj[u.id] = u; });
+    if(db){ db.ref('delegame/users').set(obj); }
+    else { localStorage.setItem('delegame_users', JSON.stringify(users)); }
+  },
+
+  genPass(){
+    const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+    let p = '';
+    for(let i=0;i<8;i++) p += chars[Math.floor(Math.random()*chars.length)];
+    const el = document.getElementById('newUserPass');
+    if(el){ el.value = p; el.type = 'text'; }
+  },
+
+  createUser(){
+    const name = (document.getElementById('newUserName')?.value || '').trim();
+    const pass = (document.getElementById('newUserPass')?.value || '').trim();
+    const role = document.getElementById('newUserRole')?.value || 'delegado';
+    if(!name || !pass){ this.toast('⚠️ Escribe usuario y contraseña', 'error'); return; }
+    if(name.length < 3){ this.toast('⚠️ Mínimo 3 caracteres en el usuario', 'error'); return; }
+    this._getUsers(users => {
+      if(users.find(u => u.name.toLowerCase() === name.toLowerCase())){
+        this.toast('⚠️ Ese usuario ya existe', 'error'); return;
+      }
+      users.push({ id: Date.now(), name, pass, role, createdAt: new Date().toLocaleDateString() });
+      this._saveUsers(users);
+      document.getElementById('newUserName').value = '';
+      document.getElementById('newUserPass').value = '';
+      this._renderUsersTable();
+      this.toast(`✅ Usuario "${name}" creado como ${role}`, 'success', 3000);
+    });
+  },
+
+  deleteUser(id){
+    this._getUsers(users => {
+      this._saveUsers(users.filter(u => u.id !== id));
+      this._renderUsersTable();
+      this.toast('🗑 Usuario eliminado', 'info', 2000);
+    });
+  },
+
+  _renderUsersTable(){
+    this._getUsers(users => {
+      const tbody = document.getElementById('usersTableBody');
+      const noMsg = document.getElementById('noUsersMsg');
+      const table = document.getElementById('usersTable');
+      if(!tbody) return;
+      if(users.length === 0){
+        if(table) table.style.display = 'none';
+        if(noMsg) noMsg.style.display = 'block';
+        return;
+      }
+      if(table) table.style.display = '';
+      if(noMsg) noMsg.style.display = 'none';
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td><strong>${u.name}</strong></td>
+          <td><span style="font-family:var(--f-mono);font-size:.82rem;background:rgba(255,255,255,.06);
+            padding:3px 8px;border-radius:6px;">${u.pass}</span></td>
+          <td><span class="user-role-badge role-${u.role}">${u.role}</span></td>
+          <td><button class="admin-del-btn" onclick="G.deleteUser(${u.id})">✕</button></td>
+        </tr>`).join('');
+    });
+  },
+
   _renderAdminContent(){
+    // Gestión de Usuarios: SOLO para Samuel (master admin)
+    const userSection = document.getElementById('adminUserSection');
+    if(userSection) userSection.style.display = this._isMasterAdmin() ? 'block' : 'none';
     this._renderWorkshopToggles();
     this._renderCustomQsList();
     this._renderSavedWorkshops();
@@ -2317,6 +2737,7 @@ const G = {
     const existing=JSON.parse(localStorage.getItem('customWorkshops')||'{}');
     delete existing[key];
     localStorage.setItem('customWorkshops',JSON.stringify(existing));
+    if(db) db.ref('delegame/customWorkshops').set(existing);
     this.toast('Taller eliminado','info');
     this._renderSavedWorkshops();
     this._renderWorkshopToggles();
