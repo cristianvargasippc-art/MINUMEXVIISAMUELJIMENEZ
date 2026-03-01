@@ -1370,11 +1370,12 @@ select.f-input{appearance:none;cursor:pointer}
     <div style="margin-top:24px;margin-bottom:8px">
       <div class="eyebrow">Panel de Control</div>
       <h2 class="big-title">Admin <em>SGA</em></h2>
+      <div id="adminWelcomeName" style="font-size:.9rem;color:var(--gold);margin-top:4px;font-weight:600;letter-spacing:1px;text-transform:uppercase"></div>
       <div class="divider"><div class="diamond"></div></div>
     </div>
 
-    <!-- Gestión de Usuarios -->
-    <div class="admin-panel">
+    <!-- Gestión de Usuarios — SOLO SAMUEL SAMUELSGA -->
+    <div class="admin-panel" id="userMgmtSection">
       <div class="admin-title">Gestión de Usuarios</div>
       <p style="font-size:.82rem;color:var(--silver);margin-bottom:14px">
         Crea usuarios con contraseña. Los delegados ingresan con su usuario y clave asignados.
@@ -1515,7 +1516,7 @@ const S = {
   mode: 'solo',
   room: null,
   playerId: null,
-  adminLoggedIn: false, adminUser: '', adminRole: '',
+  adminLoggedIn: false, adminUser: '', adminRole: '', isMaster: false,
   game: {
     mod:'', qs:[], cur:0,
     score:0, correct:0, wrong:0,
@@ -1570,28 +1571,47 @@ const BASE_QDB = {
   }
 };
 
-// Merge with custom workshops (stored in localStorage)
-const getQDB = () => {
-  const custom = JSON.parse(localStorage.getItem('customWorkshops') || '{}');
-  return {...BASE_QDB, ...custom};
-};
+// ── IN-MEMORY CACHE (synced from Firebase on boot) ──
+let _cachedWorkshops = {};
+let _cachedAdminConfig = {};
+let _workshopsReady = false;
+let _configReady = false;
 
-const getAdminConfig = () => {
-  // Try Firebase first (async not possible here, use localStorage as cache)
-  return JSON.parse(localStorage.getItem('adminConfig') || '{}');
-};
+const getQDB = () => ({ ...BASE_QDB, ..._cachedWorkshops });
+const getAdminConfig = () => _cachedAdminConfig;
+
 const saveAdminConfig = (cfg) => {
-  localStorage.setItem('adminConfig', JSON.stringify(cfg));
+  _cachedAdminConfig = cfg;
   if(db) db.ref('delegame/adminConfig').set(cfg);
 };
-// Sync adminConfig from Firebase on load
-const syncAdminConfig = () => {
+
+// ── FIREBASE REAL-TIME LISTENERS — boot on load ──
+const _initFirebaseSync = () => {
   if(!db) return;
-  db.ref('delegame/adminConfig').once('value').then(s => {
-    if(s.val()) localStorage.setItem('adminConfig', JSON.stringify(s.val()));
+
+  // Listen to customWorkshops in real-time — TODOS los dispositivos reciben cambios
+  db.ref('delegame/customWorkshops').on('value', snap => {
+    _cachedWorkshops = snap.val() || {};
+    _workshopsReady = true;
+    // Refresh admin UI if visible
+    if(typeof G !== 'undefined'){
+      if(G._renderSavedWorkshops)  G._renderSavedWorkshops();
+      if(G._renderWorkshopToggles) G._renderWorkshopToggles();
+      if(G._buildHostModBtns)      G._buildHostModBtns();
+    }
+  });
+
+  // Listen to adminConfig in real-time — habilitar/deshabilitar talleres sincroniza
+  db.ref('delegame/adminConfig').on('value', snap => {
+    if(snap.val()) _cachedAdminConfig = snap.val();
+    _configReady = true;
+    // También refrescar toggles si el panel está abierto
+    if(typeof G !== 'undefined' && G._renderWorkshopToggles) G._renderWorkshopToggles();
+    if(typeof G !== 'undefined' && G._buildHostModBtns)      G._buildHostModBtns();
   });
 };
-setTimeout(syncAdminConfig, 1500);
+// Start sync when Firebase is ready
+setTimeout(_initFirebaseSync, 600);
 
 /* ============================================================ HELPERS ============================================================ */
 const shuffle = arr => { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; };
@@ -2406,34 +2426,41 @@ const G = {
     const pw   = (document.getElementById('adminPass')?.value || '').trim();
     const card = document.getElementById('adminLoginCard');
 
-    // Check master SGA credentials
-    const masterOk = (pw === 'samuel2024' || pw === 'samuelsga') &&
-                     (user === '' || user === 'samuel' || user === 'sga' || user === 'admin');
-    
-    // Check created user accounts (async)
+    // ── ÚNICO SUPERADMIN: samuel / samuelsga ──
+    const isSamuel = (user === 'samuel' || user === 'samuelsga' || user === '') &&
+                     (pw === 'samuel2024' || pw === 'samuelsga');
+
     const doLogin = (userMatch) => {
-    if(userMatch && userMatch.disabled){
-      if(card){ card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),500); }
-      this.toast('Cuenta desactivada. Contacte al administrador.', 'error', 4000);
-      return;
-    }
-    if(masterOk || userMatch){
-      S.adminLoggedIn = true;
-      S.adminUser     = userMatch ? userMatch.name : 'Samuel SGA';
-      S.adminRole     = userMatch ? userMatch.role  : 'admin';
-      document.getElementById('adminLock').style.display    = 'none';
-      document.getElementById('adminContent').style.display = 'block';
-      this._renderAdminContent();
-      this._renderUsersTable();
-      this.toast(`Bienvenido, ${S.adminUser}`, 'success', 3000);
-    } else {
-      if(card){ card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),500); }
-      if(document.getElementById('adminPass')) document.getElementById('adminPass').value = '';
-      this.toast('❌ Usuario o contraseña incorrectos', 'error', 3000);
-    }
-    }; // end doLogin
-    // If masterOk, skip async lookup
-    if(masterOk){ doLogin(null); return; }
+      if(userMatch && userMatch.disabled){
+        if(card){ card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),500); }
+        this.toast('Cuenta desactivada. Contacte al administrador.', 'error', 4000);
+        return;
+      }
+      if(isSamuel || userMatch){
+        S.adminLoggedIn = true;
+        S.isMaster      = isSamuel;  // solo Samuel puede gestionar usuarios
+        S.adminUser     = isSamuel ? 'Samuel SGA' : userMatch.name;
+        S.adminRole     = isSamuel ? 'admin'      : userMatch.role;
+        document.getElementById('adminLock').style.display    = 'none';
+        document.getElementById('adminContent').style.display = 'block';
+        this._renderAdminContent();
+        if(isSamuel) this._renderUsersTable();
+        // Bienvenida personalizada con nombre real del usuario
+        const welcomeName = isSamuel ? 'Samuel' : userMatch.name;
+        this.toast(`Bienvenido, ${welcomeName}`, 'success', 3500);
+        // Mostrar nombre en header del dashboard
+        const wn = document.getElementById('adminWelcomeName');
+        if(wn) wn.textContent = `Sesión: ${welcomeName}`;
+        // Mostrar u ocultar sección de gestión de usuarios
+        const userSection = document.getElementById('userMgmtSection');
+        if(userSection) userSection.style.display = isSamuel ? '' : 'none';
+      } else {
+        if(card){ card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),500); }
+        if(document.getElementById('adminPass')) document.getElementById('adminPass').value = '';
+        this.toast('Usuario o contraseña incorrectos', 'error', 3000);
+      }
+    };
+    if(isSamuel){ doLogin(null); return; }
     this._getUsers(users => {
       doLogin(users.find(u => u.name.toLowerCase() === user && u.pass === pw));
     });
@@ -2442,6 +2469,7 @@ const G = {
   adminLogout(){
     S.adminLoggedIn = false;
     S.adminUser     = '';
+    S.isMaster      = false;
     document.getElementById('adminLock').style.display    = 'flex';
     document.getElementById('adminContent').style.display = 'none';
     if(document.getElementById('adminUser'))  document.getElementById('adminUser').value  = '';
@@ -2542,6 +2570,9 @@ const G = {
     this._renderWorkshopToggles();
     this._renderCustomQsList();
     this._renderSavedWorkshops();
+    // Solo Samuel ve la sección de usuarios
+    const userSection = document.getElementById('userMgmtSection');
+    if(userSection) userSection.style.display = S.isMaster ? '' : 'none';
   },
 
   _renderWorkshopToggles(){
@@ -2615,13 +2646,23 @@ const G = {
       questions.push({text,opts,correct,explanation:exp,principle:''});
     }
     const key='custom_'+Date.now();
-    const existing=JSON.parse(localStorage.getItem('customWorkshops')||'{}');
-    existing[key]={name,icon:'🛫',desc:`Taller personalizado · ${questions.length} preguntas`,questions};
-    localStorage.setItem('customWorkshops',JSON.stringify(existing));
-    this.toast(`✅ Taller "${name}" guardado (${questions.length} preguntas)`,'success',4000);
-    this.clearCustomForm();
-    this._renderSavedWorkshops();
-    this._renderWorkshopToggles();
+    const workshop={name,icon:'📋',desc:`Taller personalizado · ${questions.length} preguntas`,questions,createdAt:new Date().toLocaleDateString('es-DO')};
+    if(db){
+      // Save to Firebase — real-time listener will update all devices automatically
+      db.ref(`delegame/customWorkshops/${key}`).set(workshop).then(()=>{
+        this.toast(`Taller "${name}" guardado y visible en todos los dispositivos (${questions.length} preguntas)`,'success',4000);
+        this.clearCustomForm();
+      }).catch(e=>{
+        this.toast('Error al guardar en Firebase: '+e.message,'error',4000);
+      });
+    } else {
+      // Fallback: in-memory only (no Firebase)
+      _cachedWorkshops[key]=workshop;
+      this.toast(`Taller "${name}" guardado localmente (${questions.length} preguntas)`,'success',4000);
+      this.clearCustomForm();
+      this._renderSavedWorkshops();
+      this._renderWorkshopToggles();
+    }
   },
 
   clearCustomForm(){
@@ -2631,10 +2672,11 @@ const G = {
 
   _renderSavedWorkshops(){
     const el=document.getElementById('savedWorkshopsList');
+    if(!el) return;
     el.innerHTML='';
-    const custom=JSON.parse(localStorage.getItem('customWorkshops')||'{}');
+    const custom=_cachedWorkshops;
     if(!Object.keys(custom).length){
-      el.innerHTML='<p style="font-size:.85rem;color:var(--silver);padding:12px">No hay talleres personalizados guardados.</p>';
+      el.innerHTML='<p style="font-size:.85rem;color:var(--silver);padding:12px">No hay talleres personalizados. Crea uno arriba.</p>';
       return;
     }
     Object.entries(custom).forEach(([key,mod])=>{
@@ -2642,22 +2684,27 @@ const G = {
       div.className='workshop-toggle';
       div.innerHTML=`
         <div class="wt-info">
-          <div class="wt-name">🛫 ${mod.name}</div>
-          <div class="wt-sub">${mod.questions?.length||0} preguntas</div>
+          <div class="wt-name">${mod.name}</div>
+          <div class="wt-sub">${mod.questions?.length||0} preguntas${mod.createdAt?' · '+mod.createdAt:''}</div>
         </div>
-        <button class="btn btn-red btn-sm" onclick="G.deleteCustomWorkshop('${key}')">🗑 Eliminar</button>`;
+        <button class="btn btn-red btn-sm" onclick="G.deleteCustomWorkshop('${key}')">Eliminar</button>`;
       el.appendChild(div);
     });
   },
 
   deleteCustomWorkshop(key){
-    const existing=JSON.parse(localStorage.getItem('customWorkshops')||'{}');
-    delete existing[key];
-    localStorage.setItem('customWorkshops',JSON.stringify(existing));
-    if(db) db.ref('delegame/customWorkshops').set(existing);
-    this.toast('Taller eliminado','info');
-    this._renderSavedWorkshops();
-    this._renderWorkshopToggles();
+    if(!confirm('¿Eliminar este taller permanentemente?')) return;
+    if(db){
+      db.ref(`delegame/customWorkshops/${key}`).remove().then(()=>{
+        this.toast('Taller eliminado de todos los dispositivos','info');
+        // Listener auto-refreshes UI
+      }).catch(e=>this.toast('Error al eliminar: '+e.message,'error',3000));
+    } else {
+      delete _cachedWorkshops[key];
+      this._renderSavedWorkshops();
+      this._renderWorkshopToggles();
+      this.toast('Taller eliminado','info');
+    }
   },
 
   /* ── TOAST ── */
