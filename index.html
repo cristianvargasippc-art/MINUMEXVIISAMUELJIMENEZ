@@ -17,6 +17,7 @@
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <style>
 /* ============================================================  TOKENS  ============================================================ */
@@ -80,11 +81,7 @@ body{font-family:var(--f-body);background:var(--sky);color:var(--cream);min-heig
 }
 
 /* Logo wrap centrado sobre el video */
-.load-logo-wrap{
-  position:absolute;top:50%;left:50%;z-index:2;
-  transform:translate(-50%,-60%);
-  display:flex;align-items:center;justify-content:center;
-}
+.load-logo-wrap{display:none}
 .load-logo-img{
   max-width:min(320px,75vw);height:auto;
   object-fit:contain;
@@ -259,7 +256,7 @@ body{font-family:var(--f-body);background:var(--sky);color:var(--cream);min-heig
 
 /* ===== SCREENS ===== */
 #app{position:relative;z-index:1;min-height:100vh}
-.screen{display:none;max-width:960px;margin:0 auto;padding:28px 20px 100px;animation:fadeUp .5s cubic-bezier(.16,1,.3,1) both}
+.screen{display:none;max-width:960px;margin:0 auto;padding:clamp(16px,4vw,28px) clamp(12px,4vw,20px) clamp(80px,12vw,100px);animation:fadeUp .5s cubic-bezier(.16,1,.3,1) both}
 .screen.on{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 
@@ -376,18 +373,53 @@ select.f-input{appearance:none;cursor:pointer}
   backdrop-filter:blur(12px);
 }
 
-.home-logo-rule{
+.home-logo-rule{display:none}
+.home-logo-rule-line{display:none}
+.home-logo-rule-diamond{display:none}
+
+/* ── TIPOGRAFÍA DELEGAME EN HOME ── */
+.home-typo-logo{
   position:relative;z-index:1;
-  display:flex;align-items:center;gap:14px;
-  width:min(400px,85vw);margin-top:20px;
+  display:flex;flex-direction:column;align-items:center;
+  gap:6px;
+  padding:8px 0 4px;
 }
-.home-logo-rule-line{
+.home-typo-main{
+  font-family:'Syne',sans-serif;
+  font-weight:900;
+  font-size:clamp(3.5rem,16vw,7.5rem);
+  letter-spacing:-.03em;
+  color:#fff;
+  line-height:.95;
+  text-align:center;
+  filter:drop-shadow(0 2px 32px rgba(0,0,0,.7)) drop-shadow(0 0 40px rgba(240,192,64,.25));
+  animation:heroLogoPulse 4s ease-in-out infinite;
+}
+.home-typo-main em{
+  font-style:normal;
+  color:var(--gold);
+  text-shadow:0 0 40px rgba(240,192,64,.4);
+}
+.home-typo-rule{
+  display:flex;align-items:center;gap:12px;
+  width:min(380px,82vw);
+  margin:4px 0;
+}
+.home-typo-line{
   flex:1;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(240,192,64,.3),transparent);
+  background:linear-gradient(90deg,transparent,rgba(240,192,64,.4),transparent);
 }
-.home-logo-rule-diamond{
-  font-size:.6rem;color:var(--gold);opacity:.6;
+.home-typo-diamond{
+  font-size:.55rem;color:var(--gold);opacity:.7;
   animation:hlsTwinkle 2s ease-in-out infinite;
+}
+.home-typo-sub{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(.58rem,.9vw,.72rem);
+  letter-spacing:.22em;
+  color:rgba(240,192,64,.65);
+  text-align:center;
+  text-transform:uppercase;
 }
 .home-runway{
   position:relative;width:100%;height:6px;background:rgba(255,255,255,0.05);
@@ -395,7 +427,7 @@ select.f-input{appearance:none;cursor:pointer}
 }
 .home-runway::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--sky3),var(--gold));border-radius:3px;animation:runwayLight 3s ease-in-out infinite}
 @keyframes runwayLight{0%{opacity:0.3}50%{opacity:1}100%{opacity:0.3}}
-.runway-plane{position:absolute;top:-20px;font-size:2rem;animation:taxiPlane 6s ease-in-out infinite}
+.runway-plane{display:none}
 @keyframes taxiPlane{0%{left:0;transform:scaleX(1)}49%{left:calc(100% - 40px);transform:scaleX(1)}50%{left:calc(100% - 40px);transform:scaleX(-1)}99%{left:0;transform:scaleX(-1)}100%{left:0;transform:scaleX(1)}}
 
 .home-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
@@ -548,7 +580,7 @@ select.f-input{appearance:none;cursor:pointer}
 /* country-grid CSS removed */
 
 /* ======================================================= WAITING ROOM ======================================================= */
-.room-code-display{font-family:var(--f-head);font-size:clamp(3.5rem,12vw,6rem);letter-spacing:.2em;color:var(--gold);text-align:center;text-shadow:0 0 50px rgba(240,192,64,.4);margin:16px 0}
+.room-code-display{font-family:var(--f-head);font-size:clamp(2rem,9vw,6rem);letter-spacing:clamp(.1em,.3vw,.2em);color:var(--gold);text-align:center;text-shadow:0 0 50px rgba(240,192,64,.4);margin:clamp(8px,2vw,16px) 0;word-break:break-all}
 .boarding-list{display:flex;flex-direction:column;gap:8px;margin-top:16px;max-height:360px;overflow-y:auto}
 .pax-row{display:flex;align-items:center;gap:12px;background:rgba(11,30,63,.5);border:1px solid var(--border);border-radius:12px;padding:12px 16px;animation:fadeUp .4s ease both}
 .pax-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;background:rgba(5,18,37,.6);border:2px solid var(--border);flex-shrink:0}
@@ -573,7 +605,7 @@ select.f-input{appearance:none;cursor:pointer}
 .flt-prog-fill{height:100%;background:linear-gradient(90deg,var(--sky3),var(--dawn),var(--gold));transition:width .6s ease;border-radius:2px}
 
 /* ======================================================= GAME TOPBAR ======================================================= */
-.game-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:14px 20px;background:rgba(5,18,37,.7);border:1px solid var(--border);border-radius:16px;flex-wrap:wrap;gap:10px}
+.game-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:clamp(8px,2vw,14px) clamp(10px,3vw,20px);background:rgba(5,18,37,.7);border:1px solid var(--border);border-radius:clamp(10px,2vw,16px);flex-wrap:nowrap;gap:clamp(6px,2vw,10px);overflow:hidden}
 .score-val{font-family:var(--f-head);font-size:1.5rem;color:var(--gold);transition:transform .3s}
 .score-val.bump{animation:scoreBump .4s ease}
 @keyframes scoreBump{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
@@ -673,7 +705,7 @@ select.f-input{appearance:none;cursor:pointer}
 
 /* ======================================================= RESULTS ======================================================= */
 .cert{border:2px solid rgba(240,192,64,.3);border-radius:28px;padding:40px;margin-top:24px;background:linear-gradient(135deg,rgba(11,30,63,.6),rgba(5,18,37,.9));position:relative;overflow:hidden}
-.cert::before{content:'✈';position:absolute;top:-10px;left:-10px;font-size:8rem;color:rgba(240,192,64,.04);transform:rotate(-20deg)}
+.cert::before{content:'';display:none}
 .cert-seal{width:76px;height:76px;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 16px;box-shadow:0 0 40px rgba(240,192,64,.25)}
 .cert-score{font-family:var(--f-head);font-size:clamp(4rem,12vw,7rem);text-align:center;color:var(--gold);line-height:1;text-shadow:0 0 60px rgba(240,192,64,.35)}
 .res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
@@ -883,10 +915,223 @@ select.f-input{appearance:none;cursor:pointer}
 .mod-card{background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:24px;cursor:pointer;transition:all .3s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden}
 .mod-card:hover{transform:translateY(-8px);border-color:var(--gold);box-shadow:0 24px 60px rgba(0,0,0,.5),0 0 40px rgba(240,192,64,.15)}
 .mod-card.locked{opacity:.45;cursor:not-allowed;pointer-events:none}
-.mod-card.locked::after{content:'🔒';position:absolute;top:12px;right:12px;font-size:1rem}
+.mod-card.locked::after{content:'—';position:absolute;top:12px;right:12px;font-size:1rem}
 .mod-icon{width:52px;height:52px;border-radius:12px;background:rgba(240,192,64,.08);border:1px solid rgba(240,192,64,.2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:16px}
 .mod-title{font-family:var(--f-head);font-size:1.1rem;margin-bottom:6px}
 .mod-desc{font-size:.85rem;color:rgba(240,237,232,.6);line-height:1.6;margin-bottom:14px}
+
+/* ================================================================
+   RESPONSIVE SYSTEM — DELEGAME
+   Mobile-first: 320px → 480px → 768px → 1024px+
+================================================================ */
+
+/* ── Base resets para móvil ── */
+*, *::before, *::after { box-sizing: border-box; }
+img, video { max-width: 100%; height: auto; }
+
+/* ── Screen padding adaptativo ── */
+.screen {
+  padding: clamp(16px,4vw,28px) clamp(12px,4vw,20px) clamp(80px,12vw,100px);
+}
+
+/* ── Tipografía escalable ── */
+.big-title { font-size: clamp(1.6rem,6vw,4rem); }
+.eyebrow   { font-size: clamp(.55rem,.9vw,.72rem); letter-spacing:.22em; }
+
+/* ── Botones: full-width en mobile ── */
+@media(max-width:480px){
+  .btn-lg { width:100%; justify-content:center; padding:15px 20px; }
+  .btn-group { flex-direction:column; }
+  .btn-group .btn { width:100%; justify-content:center; }
+}
+
+/* ── Cards ── */
+.card { padding: clamp(16px,4vw,28px); border-radius: clamp(14px,3vw,20px); }
+
+/* ── HOME SCREEN ── */
+.home-hero { padding: clamp(24px,6vw,48px) 0; min-height: auto; }
+.home-cta  { flex-direction: column; align-items: stretch; }
+@media(min-width:480px){ .home-cta { flex-direction:row; align-items:center; } }
+
+.home-typo-main { font-size: clamp(2.8rem,14vw,7.5rem); }
+.home-typo-sub  { font-size: clamp(.52rem,2vw,.72rem); letter-spacing: clamp(.1em,.5vw,.22em); }
+
+.home-tags { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; padding:0 8px; }
+
+/* ── AIRPORT GRID (3 stats) ── */
+.airport-grid { grid-template-columns: 1fr; margin-top:32px; }
+@media(min-width:520px){ .airport-grid { grid-template-columns: repeat(3,1fr); } }
+
+/* ── MODE CARDS ── */
+.mode-grid { grid-template-columns:1fr; gap:12px; }
+@media(min-width:520px){ .mode-grid { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); } }
+
+/* ── FORMS (join, login) ── */
+.f-input, .admin-input { font-size:1rem; /* iOS no zoom en >=16px */ }
+.f-group { margin-bottom: 16px; }
+
+/* ── JOIN FORM ── */
+#sJoin .card { max-width:100%; }
+
+/* ── WAITING ROOM ── */
+.room-code-display { font-size: clamp(2.4rem,10vw,6rem); letter-spacing: clamp(.1em,.4vw,.2em); }
+.boarding-list { max-height: clamp(200px,40vh,360px); }
+.pax-row { padding: clamp(8px,2vw,12px) clamp(10px,3vw,16px); gap: clamp(8px,2vw,12px); }
+.pax-name { font-size: clamp(.82rem,2.5vw,.95rem); }
+
+/* ── GAME TOPBAR ── */
+.game-topbar {
+  flex-wrap: nowrap;
+  padding: clamp(8px,2vw,14px) clamp(10px,3vw,20px);
+  gap: clamp(6px,2vw,10px);
+  align-items: center;
+}
+.score-val  { font-size: clamp(1.1rem,4vw,1.5rem); }
+.timer-ring { width: clamp(40px,8vw,54px); height: clamp(40px,8vw,54px); flex-shrink:0; }
+.streak-dots{ gap: clamp(3px,1vw,5px); }
+.s-dot { width: clamp(6px,1.5vw,8px); height: clamp(6px,1.5vw,8px); }
+
+/* ── QUESTION CARD ── */
+.q-text { font-size: clamp(.88rem,2.8vw,1.2rem); line-height:1.55; }
+.q-context { font-size: clamp(.78rem,2vw,.87rem); padding: clamp(8px,2vw,12px) clamp(12px,3vw,18px); }
+.opts { gap: clamp(6px,2vw,9px); margin-top: clamp(14px,3vw,20px); }
+.opt {
+  padding: clamp(11px,2.5vw,14px) clamp(12px,3vw,18px);
+  font-size: clamp(.84rem,2.2vw,.96rem);
+  gap: clamp(8px,2vw,14px);
+}
+.opt-letter {
+  width: clamp(22px,5vw,28px);
+  height: clamp(22px,5vw,28px);
+  font-size: clamp(.6rem,1.5vw,.7rem);
+  flex-shrink:0;
+}
+@media(max-width:380px){
+  .opt { flex-direction:row; align-items:flex-start; }
+}
+
+/* ── FEEDBACK ── */
+.feedback { padding: clamp(12px,3vw,18px) clamp(14px,3vw,22px); }
+.fb-text { font-size: clamp(.82rem,2.2vw,.93rem); }
+
+/* ── NEXT ROW ── */
+.next-row { flex-wrap:wrap; gap:10px; }
+@media(max-width:480px){
+  .next-row { flex-direction:column-reverse; }
+  .next-row .btn { width:100%; justify-content:center; }
+}
+
+/* ── LEADERBOARD ── */
+.lb-row { padding: clamp(7px,2vw,9px) clamp(10px,3vw,14px); gap: clamp(6px,2vw,10px); }
+.lb-name { font-size: clamp(.78rem,2.2vw,.9rem); }
+.lb-score{ font-size: clamp(.85rem,2.5vw,1rem); }
+.lb-country{ font-size: clamp(.65rem,1.8vw,.74rem); }
+
+/* ── FLIGHT STRIP ── */
+.flight-strip { gap: clamp(8px,2vw,16px); padding: clamp(10px,2vw,16px) clamp(12px,3vw,20px); }
+.flt-route { flex-wrap:wrap; gap:6px; }
+@media(max-width:480px){
+  .flt-route { display:none; } /* hide on tiny screens */
+  .flight-strip { justify-content:space-between; }
+}
+
+/* ── CERT (results) ── */
+.cert { padding: clamp(20px,5vw,40px) clamp(16px,4vw,40px); border-radius: clamp(16px,4vw,28px); }
+.cert-score { font-size: clamp(3rem,10vw,7rem); }
+.res-grid { grid-template-columns: repeat(2,1fr); gap: clamp(8px,2vw,12px); }
+@media(min-width:520px){ .res-grid { grid-template-columns: repeat(4,1fr); } }
+
+/* ── ADMIN PANEL ── */
+.admin-panel { padding: clamp(14px,3vw,24px); border-radius: clamp(10px,2vw,16px); }
+.admin-title { font-size: clamp(.9rem,2.5vw,1.1rem); }
+
+/* Admin users table → card layout on mobile */
+@media(max-width:600px){
+  .admin-users-table thead { display:none; }
+  .admin-users-table, .admin-users-table tbody,
+  .admin-users-table tr, .admin-users-table td { display:block; width:100%; }
+  .admin-users-table tr {
+    background:rgba(11,30,63,.4);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:10px; margin-bottom:8px; padding:10px 12px;
+  }
+  .admin-users-table td {
+    border:none; padding:3px 0;
+    display:flex; align-items:center; gap:8px;
+    font-size:.82rem;
+  }
+  .admin-users-table td::before {
+    content: attr(data-label);
+    font-family:var(--f-mono); font-size:.6rem;
+    color:var(--gold); letter-spacing:.1em; text-transform:uppercase;
+    min-width:80px; flex-shrink:0;
+  }
+}
+
+/* Admin input group */
+.admin-input-group { position:relative; margin-bottom:14px; }
+.admin-input { width:100%; padding:12px 14px 12px 40px; font-size:1rem; }
+
+/* Workshop toggles grid */
+#workshopToggles { display:flex; flex-wrap:wrap; gap:10px; }
+
+/* ── WORKSHOP EDITOR ── */
+.mod-grid { grid-template-columns:1fr; }
+@media(min-width:520px){ .mod-grid { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); } }
+
+/* ── ADMIN LOGIN CARD ── */
+.admin-login-card { width: min(380px,calc(100vw - 32px)); padding: clamp(20px,4vw,28px); }
+.admin-lock { padding: clamp(24px,5vw,40px) clamp(16px,4vw,20px); }
+
+/* ── LOADING SCREEN ── */
+.load-logo-text { font-size: clamp(2.8rem,14vw,7rem); }
+.load-logo-sub  { font-size: clamp(.6rem,2vw,.7rem); letter-spacing: clamp(.1em,.5vw,.28em); }
+
+/* ── ARRIVAL SCREEN ── */
+#arrivalScreen { padding: clamp(24px,5vw,40px) clamp(16px,4vw,24px); }
+.arrival-title  { font-size: clamp(1.3rem,5vw,3rem); }
+.arrival-dest   { font-size: clamp(1.5rem,6vw,5rem); }
+
+/* ── HOST WAITING ROOM buttons ── */
+#hostModBtns { display:flex; flex-wrap:wrap; gap:10px; }
+#hostModBtns .btn { flex:1; min-width:140px; justify-content:center; }
+
+/* ── Avatar grid ── */
+.avatar-grid { grid-template-columns: repeat(5,1fr); gap: clamp(8px,2vw,12px); }
+@media(max-width:400px){ .avatar-grid { grid-template-columns: repeat(4,1fr); gap:7px; } }
+.av-btn { width: clamp(52px,12vw,64px); height: clamp(52px,12vw,64px); }
+
+/* ── Toast ── */
+.toast { max-width: min(290px, calc(100vw - 32px)); font-size: clamp(.68rem,2vw,.74rem); }
+
+/* ── Scrollbar only on tablet+ ── */
+@media(max-width:768px){
+  ::-webkit-scrollbar{ width:2px; }
+}
+
+/* ── Safe area for notched phones (iPhone, etc.) ── */
+.screen { padding-bottom: max(100px, calc(80px + env(safe-area-inset-bottom))); }
+#loadScreen { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ── Prevent layout shift on orientation change ── */
+@media(orientation:landscape) and (max-height:500px){
+  .home-hero { min-height:auto; padding:16px 0; }
+  .home-typo-main { font-size:clamp(2rem,8vh,4rem); }
+  .load-logo-text { font-size:clamp(2rem,8vh,4rem); }
+  .boarding-list { max-height:180px; }
+  .admin-lock-badge { width:70px; height:70px; margin-bottom:14px; }
+  .admin-lock-icon-inner { width:70px; height:70px; font-size:2rem; }
+}
+
+/* ── Large tablets & desktop ── */
+@media(min-width:768px){
+  .mode-grid { grid-template-columns: repeat(2,1fr); }
+  .res-grid  { grid-template-columns: repeat(4,1fr); }
+  .home-cta  { flex-direction:row; align-items:center; }
+}
+@media(min-width:1024px){
+  .mode-grid { grid-template-columns: repeat(3,1fr); }
+}
 </style>
 </head>
 <body>
@@ -917,7 +1162,7 @@ select.f-input{appearance:none;cursor:pointer}
 <!-- Countdown overlay -->
 <div id="countdownOverlay">
   <div class="cd-num" id="cdNum">3</div>
-  <div class="cd-label">⚡ MOTORES ENCENDIDOS — PREPARANDO DESPEGUE</div>
+  <div class="cd-label">MOTORES ENCENDIDOS — PREPARANDO DESPEGUE</div>
 </div>
 
 <!-- ===== LOADING SCREEN ===== -->
@@ -931,7 +1176,7 @@ select.f-input{appearance:none;cursor:pointer}
 
   <!-- ── BOTÓN SALTAR — siempre visible ── -->
   <button class="skip-vid show" id="skipBtn" onclick="G.endLoad()">
-    ⏭ SALTAR INTRO
+    SALTAR INTRO
   </button>
 
   <!-- ── BOTÓN SONIDO — siempre visible, en la parte superior ── -->
@@ -944,18 +1189,12 @@ select.f-input{appearance:none;cursor:pointer}
         <div class="eq-bar"></div>
         <div class="eq-bar"></div>
       </div>
-      <span class="sound-btn-text">🔇 Activar Sonido</span>
+      <span class="sound-btn-text">Activar Sonido</span>
     </div>
     <span class="sound-btn-sub">Toca para escuchar el video</span>
   </button>
 
-  <!-- Logo centrado -->
-  <div class="load-logo-wrap">
-    <img src="./imagenes/logosamuelsg.png" id="loadLogoImg" class="load-logo-img"
-      alt="SGA Samuel Jiménez"
-      onerror="this.style.display='none';document.getElementById('loadLogoFallback').style.display='flex'">
-    <div id="loadLogoFallback" style="display:none"></div>
-  </div>
+  <!-- Sin logo sobre el video — intro limpia -->
 
   <!-- UI de carga — abajo del todo -->
   <div class="load-ui">
@@ -1011,20 +1250,20 @@ select.f-input{appearance:none;cursor:pointer}
         <div class="home-logo-beam home-logo-beam-l"></div>
         <div class="home-logo-beam home-logo-beam-r"></div>
         <div class="home-logo-stars-row">
-          <span class="hls">✦</span><span class="hls">·</span>
-          <span class="hls">✦</span><span class="hls">·</span>
-          <span class="hls">✦</span>
+          <span class="hls"></span><span class="hls">·</span>
+          <span class="hls"></span><span class="hls">·</span>
+          <span class="hls"></span>
         </div>
       </div>
-      <img src="./imagenes/logofinal.jpeg" alt="DELEGAME · Samuel Jiménez SGA"
-        class="home-logo-img-main"
-        onerror="this.style.display='none';document.getElementById('homeLogoFallback').style.display='flex'">
-      <div id="homeLogoFallback" class="home-logo-fallback" style="display:none">
-        <span style="font-size:2.5rem"></span>
-        <div>
-          <div style="font-family:var(--f-head);font-size:1.2rem;color:var(--gold);letter-spacing:.12em">SAMUEL JIMÉNEZ</div>
-          <div style="font-family:var(--f-mono);font-size:.65rem;color:var(--silver);letter-spacing:.2em;margin-top:4px">SECRETARIO GENERAL ACADÉMICO · DELEGAME</div>
+      <!-- Tipografía DELEGAME — sin dependencia de imagen -->
+      <div class="home-typo-logo">
+        <div class="home-typo-main">DELE<em>GAME</em></div>
+        <div class="home-typo-rule">
+          <div class="home-typo-line"></div>
+          <span class="home-typo-diamond">◆</span>
+          <div class="home-typo-line"></div>
         </div>
+        <div class="home-typo-sub">ACADEMIA DIPLOMÁTICA · MINUME XVII</div>
       </div>
       <!-- Línea decorativa inferior -->
       <div class="home-logo-rule">
@@ -1041,8 +1280,8 @@ select.f-input{appearance:none;cursor:pointer}
     <div class="home-tags">
       <span class="tag">🇩🇴 Rep. Dominicana</span>
       <span class="tag"> DELEGAME Airlines</span>
-      <span class="tag">⚖ Derecho Internacional</span>
-      <span class="tag">🌐 Multijugador Real</span>
+      <span class="tag">Derecho Internacional</span>
+      <span class="tag">Multijugador Real</span>
     </div>
 
     <div class="eyebrow">DELEGAME · Programa de Formación</div>
@@ -1054,7 +1293,7 @@ select.f-input{appearance:none;cursor:pointer}
     </p>
     <div class="home-cta">
       <button class="btn btn-gold btn-lg" onclick="G.go('sModeSelect')">Abordar →</button>
-      <button class="btn btn-ghost" onclick="G.go('sAdmin')">⚙ Admin Panel</button>
+      <button class="btn btn-ghost" onclick="G.go('sAdmin')">Admin Panel</button>
     </div>
     <div class="airport-grid">
       <div class="airport-cell"><div class="airport-code">SDQ</div><div class="airport-name">Punto de Partida</div></div>
@@ -1073,7 +1312,7 @@ select.f-input{appearance:none;cursor:pointer}
   </div>
   <div class="mode-grid">
     <div class="mode-card" onclick="G.go('sRegister',{mode:'solo'})">
-      <div class="mode-icon">🎯</div>
+      <div class="mode-icon">◎</div>
       <div class="mode-title">Vuelo Solo</div>
       <p class="mode-desc">Entrena a tu ritmo como delegado individual. Sin límite de tiempo en sala.</p>
       <div class="btn-group"><span class="badge badge-blue">1 pasajero</span><span class="badge badge-gold">Sin sala</span></div>
@@ -1085,7 +1324,7 @@ select.f-input{appearance:none;cursor:pointer}
       <div class="btn-group"><span class="badge badge-dawn">Piloto</span><span class="badge badge-blue">Hasta 30</span></div>
     </div>
     <div class="mode-card" onclick="G.go('sJoin')">
-      <div class="mode-icon">🚀</div>
+      <div class="mode-icon">◈</div>
       <div class="mode-title">Unirse al Vuelo</div>
       <p class="mode-desc">¿Tienes el código de sala? Aborda como pasajero y compite en tiempo real.</p>
       <div class="btn-group"><span class="badge badge-gold">Código requerido</span></div>
@@ -1118,12 +1357,12 @@ select.f-input{appearance:none;cursor:pointer}
     </div>
 
     <div class="f-wrap">
-      <label class="f-label" for="iCountry">🌐 País o Institución Representada</label>
+      <label class="f-label" for="iCountry">País o Institución Representada</label>
       <input type="text" id="iCountry" class="f-input" placeholder="Ej: Colombia, España, ONU..."
         maxlength="40" autocomplete="off"
         oninput="G.countryInput(this.value)">
       <div id="countryDupWarn" style="display:none;color:#F87171;font-family:var(--f-mono);font-size:.68rem;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.1);border-radius:6px;border:1px solid rgba(239,68,68,.25)">
-        ⚠️ Este país ya está en la sala — elige uno diferente
+        Este país ya está en la sala — elige uno diferente
       </div>
     </div>
 
@@ -1131,9 +1370,9 @@ select.f-input{appearance:none;cursor:pointer}
 
     <label class="f-label">Nivel de Dificultad</label>
     <div class="btn-group" style="margin-top:10px">
-      <button class="btn btn-ghost diff-btn sel" data-d="1" onclick="G.setDiff(1,this)">🎓 Adjunto (40s)</button>
-      <button class="btn btn-ghost diff-btn" data-d="2" onclick="G.setDiff(2,this)">⚖ Embajador (25s)</button>
-      <button class="btn btn-ghost diff-btn" data-d="3" onclick="G.setDiff(3,this)">🏛 Sec. General (15s)</button>
+      <button class="btn btn-ghost diff-btn sel" data-d="1" onclick="G.setDiff(1,this)"> Adjunto (40s)</button>
+      <button class="btn btn-ghost diff-btn" data-d="2" onclick="G.setDiff(2,this)"> Embajador (25s)</button>
+      <button class="btn btn-ghost diff-btn" data-d="3" onclick="G.setDiff(3,this)"> Sec. General (15s)</button>
     </div>
 
     <div class="btn-group" style="margin-top:28px">
@@ -1272,7 +1511,7 @@ select.f-input{appearance:none;cursor:pointer}
 
   <!-- Live leaderboard -->
   <div id="liveLbStrip" style="display:none;margin-bottom:14px">
-    <div class="eyebrow">🏆 En Vuelo — Tabla en Vivo</div>
+    <div class="eyebrow">En Vuelo — Tabla en Vivo</div>
     <div class="leaderboard" id="liveLeaderboard"></div>
   </div>
 
@@ -1296,7 +1535,7 @@ select.f-input{appearance:none;cursor:pointer}
 <!-- ─── RESULTS ─── -->
 <div class="screen" id="sResults">
   <div class="cert">
-    <div class="cert-seal" id="resSeal">🎖</div>
+    <div class="cert-seal" id="resSeal"></div>
     <div style="text-align:center;margin-bottom:14px">
       <div class="eyebrow">Certificado de Evaluación · DELEGAME Airlines</div>
       <div class="big-title" style="font-size:1.6rem;margin-top:8px" id="resName">—</div>
@@ -1310,7 +1549,7 @@ select.f-input{appearance:none;cursor:pointer}
       <div class="res-cell"><div class="res-num" id="resPct">—</div><div class="res-lbl">Eficacia</div></div>
     </div>
     <div id="finalLb" style="display:none;margin-bottom:20px">
-      <div class="eyebrow">🏆 Tabla Final del Vuelo</div>
+      <div class="eyebrow">Tabla Final del Vuelo</div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <span style="font-family:var(--f-mono);font-size:.7rem;color:var(--gold);letter-spacing:.1em">TABLA FINAL</span>
         <button class="btn btn-ghost btn-sm" onclick="G.refreshFinalLeaderboard()" style="font-size:.72rem;padding:5px 12px">
@@ -1340,7 +1579,7 @@ select.f-input{appearance:none;cursor:pointer}
     <div class="admin-lock-badge">
       <div class="admin-lock-badge-ring"></div>
       <div class="admin-lock-badge-ring2"></div>
-      <div class="admin-lock-icon-inner">🛡️</div>
+      <div class="admin-lock-icon-inner" style="font-family:var(--f-head);font-size:2rem;color:var(--gold);letter-spacing:-.02em">SGA</div>
     </div>
 
     <div class="admin-lock-title">Panel de Control</div>
@@ -1349,13 +1588,13 @@ select.f-input{appearance:none;cursor:pointer}
     <div class="admin-login-card" id="adminLoginCard">
       <!-- Username -->
       <div class="admin-input-group">
-        <span class="admin-input-icon">👤</span>
-        <input type="text" id="adminUser" class="admin-f-input" placeholder="Usuario"
+        <span class="admin-input-icon" style="font-size:.8rem;font-family:var(--f-mono)">@</span>
+        <input type="text" id="adminUser" class="admin-f-input" placeholder="correo@ejemplo.com"
           autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('adminPass').focus()">
       </div>
       <!-- Password -->
       <div class="admin-input-group">
-        <span class="admin-input-icon">🔑</span>
+        <span class="admin-input-icon" style="font-size:.8rem;font-family:var(--f-mono)">••</span>
         <input type="password" id="adminPass" class="admin-f-input" placeholder="Contraseña"
           autocomplete="current-password" onkeydown="if(event.key==='Enter')G.adminLogin()">
       </div>
@@ -1394,7 +1633,7 @@ select.f-input{appearance:none;cursor:pointer}
             <input type="text" id="newUserPass" class="f-input" placeholder="Ej: delegado2024" maxlength="30"
               style="margin-top:4px;padding-right:40px">
             <button onclick="G.genPass()" title="Generar contraseña"
-              style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;opacity:.6">🎲</button>
+              style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;opacity:.6"></button>
           </div>
         </div>
         <div>
@@ -1444,8 +1683,8 @@ select.f-input{appearance:none;cursor:pointer}
       <div id="customQsList"></div>
       <button class="btn btn-ghost btn-sm" style="margin-bottom:12px" onclick="G.addCustomQ()">+ Agregar Pregunta</button>
       <div class="btn-group">
-        <button class="btn btn-gold" onclick="G.saveCustomWorkshop()">💾 Guardar Taller</button>
-        <button class="btn btn-ghost" onclick="G.clearCustomForm()">🗑 Limpiar</button>
+        <button class="btn btn-gold" onclick="G.saveCustomWorkshop()">Guardar Taller</button>
+        <button class="btn btn-ghost" onclick="G.clearCustomForm()">Limpiar</button>
       </div>
     </div>
 
@@ -1455,7 +1694,7 @@ select.f-input{appearance:none;cursor:pointer}
     </div>
 
     <div class="btn-group" style="margin-top:20px">
-      <button class="btn btn-ghost" onclick="G.adminLogout()">🔒 Cerrar Sesión</button>
+      <button class="btn btn-ghost" onclick="G.adminLogout()"> Cerrar Sesión</button>
       <button class="btn btn-ghost" onclick="G.go('sHome')">← Terminal</button>
     </div>
   </div>
@@ -1482,10 +1721,13 @@ const FB_CONFIG = {
 };
 
 let db = null;
+let auth = null;
 try {
   firebase.initializeApp(FB_CONFIG);
-  db = firebase.database();
-  console.log("✅ Firebase SAMUELSGA conectado");
+  db   = firebase.database();
+  auth = firebase.auth();
+  // Silenciar logs en producción
+  console.log(" Firebase conectado");
 } catch(e) { console.warn("Firebase error:", e.message); }
 
 /* ============================================================ AVATARS ============================================================ */
@@ -1516,7 +1758,7 @@ const S = {
   mode: 'solo',
   room: null,
   playerId: null,
-  adminLoggedIn: false, adminUser: '', adminRole: '', isMaster: false,
+  adminLoggedIn: false, adminUser: '', adminRole: '', isMaster: false, adminUID: null,
   game: {
     mod:'', qs:[], cur:0,
     score:0, correct:0, wrong:0,
@@ -1528,7 +1770,7 @@ const S = {
 /* ============================================================ BASE QUESTIONS DB ============================================================ */
 const BASE_QDB = {
   oratoria:{
-    name:'Oratoria Parlamentaria', icon:'🎤',
+    name:'Oratoria Parlamentaria', icon:'',
     desc:'Discursos bajo presión, gestión de imprevistos y arquitectura del argumento.',
     questions:[
       {text:"Durante tu intervención, la conexión a internet cae cuando ibas a mostrar evidencia visual clave. Los delegados de Rusia y China intercambian sonrisas. ¿Qué haces?",context:"Tienes 3 minutos de tiempo asignado restante.",opts:["Pides un receso técnico de 20 minutos.","Sonríes, dices 'Continuemos al estilo clásico' y reformulas el argumento de memoria con más convicción.","Lees textualmente tus notas sin mirar a nadie.","Cedes el turno de palabra."],correct:1,explanation:"Improvisar con solidez argumental es la firma del orador de alto nivel. El dominio del tema debe ser suficiente para prescindir de apoyos visuales — y hacerlo con calma convierte el imprevisto en una demostración de autoridad.",principle:"Principio: Adaptabilidad y dominio del contenido bajo presión técnica."},
@@ -1542,7 +1784,7 @@ const BASE_QDB = {
     ]
   },
   negociacion:{
-    name:'Negociación Multilateral', icon:'🤝',
+    name:'Negociación Multilateral', icon:'',
     desc:'Coaliciones, bloqueos, tácticas de última hora y mediación de alto nivel.',
     questions:[
       {text:"Buscas los votos del Grupo Africano. Uno te ofrece su apoyo a cambio de votar contra una enmienda de tu aliado estratégico. ¿Qué haces?",context:"La votación es mañana. Todavía necesitas 4 votos más.",opts:["Aceptas: los votos africanos son más urgentes ahora.","Rechazas y buscas otros votos.","Exploras si existe una modificación técnica a la enmienda que satisfaga a ambas partes.","Finges aceptar pero luego votas como quieras."],correct:2,explanation:"Las negociaciones raramente son binarias. La búsqueda de una tercera opción es la movida del negociador avanzado.",principle:"Táctica: Transformar opciones binarias en negociaciones multipartitas."},
@@ -1556,7 +1798,7 @@ const BASE_QDB = {
     ]
   },
   protocolo:{
-    name:'Protocolo y Derecho ONU', icon:'📜',
+    name:'Protocolo y Derecho ONU', icon:'',
     desc:'Carta de la ONU, Capítulo VII, Convención de Viena y procedimiento parlamentario.',
     questions:[
       {text:"¿Bajo qué condición puede el Consejo de Seguridad tomar medidas coercitivas contra un Estado miembro sin su consentimiento?",context:"Artículos 39-42, Carta de las Naciones Unidas.",opts:["Cuando la AG aprueba una resolución por 2/3.","Cuando el Secretario General emite declaración de emergencia.","Cuando el CS determina la existencia de amenaza a la paz conforme al Capítulo VII.","Cuando cinco o más miembros del CS presentan petición formal."],correct:2,explanation:"El Capítulo VII (Arts. 39-42) es la base jurídica de las intervenciones coercitivas. Solo cuando el CS califica formalmente bajo el Art. 39 puede autorizar sanciones (Art. 41) o uso de la fuerza (Art. 42).",principle:"Referencia: Carta ONU, Capítulo VII, Arts. 39-42."},
@@ -1671,7 +1913,7 @@ const CIRC    = 144.5;
     {p:54, l:'Compilando escenarios…',     s:'Preparando sala de sesiones',         dot:3, ms:1400},
     {p:70, l:'Conectando Firebase…',       s:'Inicializando multijugador en vivo',  dot:4, ms:1450},
     {p:88, l:'Preparando pista…',          s:'Comprobando sistemas de vuelo',       dot:5, ms:1400},
-    {p:100,l:'¡Pista despejada! ✓',       s:'Bienvenido a DELEGAME',               dot:6, ms:1300},
+    {p:100,l:'¡Pista despejada! ',       s:'Bienvenido a DELEGAME',               dot:6, ms:1300},
   ];
 
   const updateDots = (a) => {
@@ -1747,14 +1989,14 @@ const G = {
       const txt   = btn.querySelector('.sound-btn-text');
       const sub   = btn.querySelector('.sound-btn-sub');
       if(inner){ inner.style.borderColor='rgba(34,197,94,.7)'; inner.style.background='rgba(34,197,94,.15)'; }
-      if(txt)  { txt.textContent = '🔊 Sonido Activo'; txt.style.color='#86EFAC'; }
+      if(txt)  { txt.textContent = ' Sonido Activo'; txt.style.color='#86EFAC'; }
       if(sub)  { sub.textContent = 'Audio activado'; }
       // Animate eq bars faster to show audio is on
       btn.querySelectorAll('.eq-bar').forEach(b => { b.style.animationDuration = '0.3s'; });
       setTimeout(() => btn.style.opacity = '0', 1800);
       setTimeout(() => btn.style.display = 'none', 2200);
     }
-    this.toast('🔊 ¡Sonido activado!', 'success', 2000);
+    this.toast(' ¡Sonido activado!', 'success', 2000);
   },
 
   endLoad(){
@@ -1792,7 +2034,7 @@ const G = {
     const ey = document.getElementById('regEyebrow');
     ey.textContent = S.mode==='host'
       ? ' Tarjeta de Embarque — Piloto'
-      : '🎫 Tarjeta de Embarque — Pasajero';
+      : ' Tarjeta de Embarque — Pasajero';
   },
 
   /* ── AVATAR GRID ── */
@@ -1954,62 +2196,70 @@ const G = {
   },
 
   /* ── JOIN ── */
+  _makeStableId(name, ctry){
+    // ID determinístico y seguro para Firebase (sin chars inválidos)
+    const raw = (name + '___' + ctry).toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9]/g,'x').slice(0,28);
+    // Añadir hash simple para que sea único incluso con nombres similares
+    let h = 0;
+    for(let i=0;i<raw.length;i++) h = (h*31+raw.charCodeAt(i))>>>0;
+    return raw + '_' + (h % 9999).toString(16);
+  },
+
   joinRoom(){
-    const name  = document.getElementById('jName').value.trim();
-    const ctry  = document.getElementById('jCountry').value.trim();
-    const code  = document.getElementById('jCode').value.trim().toUpperCase();
+    const name  = (document.getElementById('jName')?.value||'').trim();
+    const ctry  = (document.getElementById('jCountry')?.value||'').trim();
+    const code  = (document.getElementById('jCode')?.value||'').trim().toUpperCase();
     const av    = S.player.avatar || '';
     if(!name||!ctry||!code){ this.toast('Completa todos los campos.','warn'); return; }
     if(code.length!==6){ this.toast('El código debe tener 6 caracteres.','warn'); return; }
-    if(!db){ this.toast('⚠ Firebase no configurado.','warn',5000); return; }
+    if(!db){ this.toast('Firebase no configurado.','warn',5000); return; }
 
-    // ID ESTABLE: basado en nombre+país — si la misma persona vuelve,
-    // sobrescribe su slot anterior en vez de crear uno nuevo
-    const stableId = btoa(unescape(encodeURIComponent(
-      (name + '_' + ctry).toLowerCase().replace(/\s+/g,'_')
-    ))).replace(/[^a-zA-Z0-9]/g,'').slice(0,20);
+    // ID 100% estable: misma persona → mismo ID → sobrescribe en lugar de duplicar
+    const stableId = this._makeStableId(name, ctry);
 
     db.ref(`rooms/${code}`).once('value').then(snap=>{
       if(!snap.exists()){ this.toast('Sala no encontrada. Verifica el código.','error'); return; }
       const players = snap.val()?.players || {};
 
-      // Verificar país duplicado — ignorar si ES el mismo jugador reconectando
-      const dupCountry = Object.entries(players).find(([id, p]) =>
-        id !== stableId &&
-        p.country && p.country.toLowerCase() === ctry.toLowerCase()
+      // País duplicado — permitir si el ID es el mismo (reconexión propia)
+      const dupCountry = Object.entries(players).find(([id,p])=>
+        id !== stableId && p.country &&
+        p.country.trim().toLowerCase() === ctry.trim().toLowerCase()
       );
       if(dupCountry){
-        this.toast(`"${ctry}" ya está ocupado en esta sala. Elige un país diferente.`, 'error', 5000);
-        const el = document.getElementById('jCountry');
-        if(el){ el.style.borderColor='#EF4444'; setTimeout(()=>el.style.borderColor='',3000); }
+        this.toast(`El país "${ctry}" ya lo representa otra delegación. Elige otro.`,'error',5000);
+        const el=document.getElementById('jCountry');
+        if(el){el.style.borderColor='#EF4444';setTimeout(()=>el.style.borderColor='',3000);}
         return;
       }
 
-      // Verificar nombre duplicado — misma lógica
-      const dupName = Object.entries(players).find(([id, p]) =>
-        id !== stableId &&
-        p.name && p.name.toLowerCase() === name.toLowerCase()
+      // Nombre duplicado — misma lógica
+      const dupName = Object.entries(players).find(([id,p])=>
+        id !== stableId && p.name &&
+        p.name.trim().toLowerCase() === name.trim().toLowerCase()
       );
       if(dupName){
-        this.toast(`"${name}" ya está en esta sala. Usa un nombre diferente.`, 'error', 5000);
-        const el = document.getElementById('jName');
-        if(el){ el.style.borderColor='#EF4444'; setTimeout(()=>el.style.borderColor='',3000); }
+        this.toast(`El nombre "${name}" ya está en uso en esta sala.`,'error',5000);
+        const el=document.getElementById('jName');
+        if(el){el.style.borderColor='#EF4444';setTimeout(()=>el.style.borderColor='',3000);}
         return;
       }
 
-      S.player.name=name; S.player.country=ctry; S.mode='player'; S.room=code; S.playerId=stableId;
+      // Limpiar cualquier registro anterior de este mismo ID (reconexión limpia)
       const playerRef = db.ref(`rooms/${code}/players/${stableId}`);
+      playerRef.onDisconnect().remove(); // auto-limpieza al desconectar
 
-      // onDisconnect: al cerrar el navegador o perder conexión, borrarse automáticamente
-      playerRef.onDisconnect().remove();
+      S.player.name=name; S.player.country=ctry;
+      S.mode='player'; S.room=code; S.playerId=stableId;
 
-      // Guardar jugador (sobrescribe si era reconexión)
       playerRef.set({
-        name, country: ctry, avatar: av, score: 0, streak: 0,
-        avatarKey: S.player.avatarKey || 'd0', joinedAt: Date.now()
+        name, country:ctry, avatar:av, score:0, streak:0,
+        avatarKey:S.player.avatarKey||'d0', joinedAt:Date.now()
       });
 
-      document.getElementById('wpRoomCode').textContent = code;
+      document.getElementById('wpRoomCode').textContent=code;
       this.go('sWaitingPlayer');
       this._listenAsPlayer();
     });
@@ -2022,7 +2272,7 @@ const G = {
     if(!db){
       this.go('sWaiting');
       this._buildHostModBtns();
-      this.toast('⚠ Firebase no configurado — modo demo (1 jugador local).','warn',8000);
+      this.toast('Firebase no configurado — modo demo (1 jugador local).','warn',8000);
       return;
     }
     db.ref(`rooms/${S.room}`).set({host:'HOST',status:'waiting',module:null,started:false}).then(()=>{
@@ -2131,7 +2381,7 @@ const G = {
     ov.classList.add('on');
     let c=n;
     const tick=()=>{
-      num.textContent=c>0?c:'🛫';
+      num.textContent=c>0?c:'';
       num.style.animation='none';void num.offsetWidth;num.style.animation='cdPop .9s ease both';
       if(--c>=0) setTimeout(tick,950);
       else setTimeout(()=>{ov.classList.remove('on');cb();},700);
@@ -2170,7 +2420,7 @@ const G = {
 
   _renderLiveBoard(list){
     const el=document.getElementById('liveLeaderboard');
-    const medals=['🥇','🥈','🥉'];
+    const medals=['','',''];
     el.innerHTML='';
     list.slice(0,5).forEach((p,i)=>{
       const d=document.createElement('div');
@@ -2300,7 +2550,7 @@ const G = {
       document.getElementById('multChip').classList.toggle('fire',g.mult>=2.0);
       this._renderStreak();
       this._floatPts(pts);
-      this.toast(`✅ +${pts} pts  ×${g.mult.toFixed(1)}`,'success',1800);
+      this.toast(` +${pts} pts  ×${g.mult.toFixed(1)}`,'success',1800);
       if(db&&S.room) db.ref(`rooms/${S.room}/players/${S.playerId}`).update({score:g.score,streak:g.streak});
     } else {
       opts[idx].classList.add('wrong');
@@ -2330,7 +2580,7 @@ const G = {
     const lbl=document.getElementById('fbLabel');
     fb.classList.add('show',ok?'correct':'wrong');
     lbl.className='fb-label '+(ok?'correct':'wrong');
-    lbl.textContent=ok?'✅ Respuesta Correcta — Análisis:':'❌ Incorrecto — Análisis:';
+    lbl.textContent=ok?' Respuesta Correcta — Análisis:':' Incorrecto — Análisis:';
     document.getElementById('fbText').textContent=q.explanation||'';
     document.getElementById('fbPrinciple').textContent=q.principle||'';
   },
@@ -2386,10 +2636,10 @@ const G = {
     document.getElementById('resPct').textContent=pct+'%';
 
     const grades=[
-      {min:90,seal:'🏛',t:'Secretario General — Distinción Excepcional',d:'Dominio técnico y analítico de nivel superior. Capacidad demostrada para actuar bajo presión en escenarios de alta complejidad. Listo para liderar delegaciones internacionales en DELEGAME.'},
-      {min:75,seal:'🎖',t:'Embajador de Primera Clase',d:'Sólida comprensión de los principios y procedimientos diplomáticos. Con práctica adicional en los escenarios más desafiantes, alcanzarás el nivel de excelencia.'},
-      {min:60,seal:'⚖',t:'Diplomático Acreditado',d:'Captas los conceptos fundamentales y aplicas estrategias básicas. Identifica tus puntos débiles en procedimiento parlamentario y negociación avanzada.'},
-      {min:0, seal:'📚',t:'Attaché en Formación',d:'La diplomacia se perfecciona con estudio constante. Repasa la Carta ONU, la Convención de Viena y bibliografía básica de negociación multilateral.'}
+      {min:90,seal:'',t:'Secretario General — Distinción Excepcional',d:'Dominio técnico y analítico de nivel superior. Capacidad demostrada para actuar bajo presión en escenarios de alta complejidad. Listo para liderar delegaciones internacionales en DELEGAME.'},
+      {min:75,seal:'',t:'Embajador de Primera Clase',d:'Sólida comprensión de los principios y procedimientos diplomáticos. Con práctica adicional en los escenarios más desafiantes, alcanzarás el nivel de excelencia.'},
+      {min:60,seal:'',t:'Diplomático Acreditado',d:'Captas los conceptos fundamentales y aplicas estrategias básicas. Identifica tus puntos débiles en procedimiento parlamentario y negociación avanzada.'},
+      {min:0, seal:'',t:'Attaché en Formación',d:'La diplomacia se perfecciona con estudio constante. Repasa la Carta ONU, la Convención de Viena y bibliografía básica de negociación multilateral.'}
     ];
 
     const gr=grades.find(r=>pct>=r.min);
@@ -2441,7 +2691,7 @@ const G = {
       const d=document.createElement('div');
       d.className='mod-card'+(locked?' locked':'');
       d.innerHTML=`
-        <div class="mod-icon">${mod.icon||'📚'}</div>
+        <div class="mod-icon">${mod.icon||''}</div>
         <div class="mod-title">${mod.name}</div>
         <p class="mod-desc">${mod.desc||''}</p>
         <div class="btn-group">
@@ -2467,59 +2717,62 @@ const G = {
   },
 
   adminLogin(){
-    const user = (document.getElementById('adminUser')?.value || '').trim().toLowerCase();
-    const pw   = (document.getElementById('adminPass')?.value || '').trim();
-    const card = document.getElementById('adminLoginCard');
+    const emailRaw = (document.getElementById('adminUser')?.value || '').trim();
+    const pw       = (document.getElementById('adminPass')?.value || '').trim();
+    const card     = document.getElementById('adminLoginCard');
+    if(!emailRaw || !pw){
+      this.toast('Completa correo y contraseña.', 'warn'); return;
+    }
+    // Normalizar: si no tiene @ asumimos dominio interno
+    const email = emailRaw.includes('@') ? emailRaw : emailRaw + '@delegame.app';
 
-    // ── ÚNICO SUPERADMIN: samuel / samuelsga ──
-    const isSamuel = (user === 'samuel' || user === 'samuelsga' || user === '') &&
-                     (pw === 'samuel2024' || pw === 'samuelsga');
+    if(!auth){ this.toast('Auth no disponible.', 'error'); return; }
 
-    const doLogin = (userMatch) => {
-      if(userMatch && userMatch.disabled){
-        if(card){ card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),500); }
-        this.toast('Cuenta desactivada. Contacte al administrador.', 'error', 4000);
-        return;
-      }
-      if(isSamuel || userMatch){
-        S.adminLoggedIn = true;
-        S.isMaster      = isSamuel;  // solo Samuel puede gestionar usuarios
-        S.adminUser     = isSamuel ? 'Samuel SGA' : userMatch.name;
-        S.adminRole     = isSamuel ? 'admin'      : userMatch.role;
-        document.getElementById('adminLock').style.display    = 'none';
-        document.getElementById('adminContent').style.display = 'block';
-        this._renderAdminContent();
-        if(isSamuel) this._renderUsersTable();
-        // Bienvenida personalizada con nombre real del usuario
-        const welcomeName = isSamuel ? 'Samuel' : userMatch.name;
-        this.toast(`Bienvenido, ${welcomeName}`, 'success', 3500);
-        // Mostrar nombre en header del dashboard
-        const wn = document.getElementById('adminWelcomeName');
-        if(wn) wn.textContent = `Sesión: ${welcomeName}`;
-        // Mostrar u ocultar sección de gestión de usuarios
-        const userSection = document.getElementById('userMgmtSection');
-        if(userSection) userSection.style.display = isSamuel ? '' : 'none';
-      } else {
+    // ── Firebase Authentication: cero contraseñas en el JS ──
+    auth.signInWithEmailAndPassword(email, pw)
+      .then(cred => {
+        const uid   = cred.user.uid;
+        const eUser = cred.user.email || '';
+        // Leer perfil desde la DB usando el UID
+        return db.ref(`delegame/admins/${uid}`).once('value').then(snap => {
+          const profile = snap.val() || {};
+          const isMaster = profile.role === 'admin';
+          S.adminLoggedIn = true;
+          S.isMaster      = isMaster;
+          S.adminUser     = profile.displayName || eUser.split('@')[0];
+          S.adminRole     = profile.role || 'anfitrion';
+          S.adminUID      = uid;
+          document.getElementById('adminLock').style.display    = 'none';
+          document.getElementById('adminContent').style.display = 'block';
+          this._renderAdminContent();
+          if(isMaster) this._renderUsersTable();
+          const wn = document.getElementById('adminWelcomeName');
+          if(wn) wn.textContent = `Sesión: ${S.adminUser}`;
+          const userSection = document.getElementById('userMgmtSection');
+          if(userSection) userSection.style.display = isMaster ? '' : 'none';
+          this.toast(`Bienvenido, ${S.adminUser}`, 'success', 3500);
+        });
+      })
+      .catch(err => {
         if(card){ card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),500); }
         if(document.getElementById('adminPass')) document.getElementById('adminPass').value = '';
-        this.toast('Usuario o contraseña incorrectos', 'error', 3000);
-      }
-    };
-    if(isSamuel){ doLogin(null); return; }
-    this._getUsers(users => {
-      doLogin(users.find(u => u.name.toLowerCase() === user && u.pass === pw));
-    });
+        const msg = err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential'
+          ? 'Correo o contraseña incorrectos.' : 'Error de autenticación.';
+        this.toast(msg, 'error', 4000);
+      });
   },
 
   adminLogout(){
+    if(auth) auth.signOut().catch(()=>{});
     S.adminLoggedIn = false;
     S.adminUser     = '';
     S.isMaster      = false;
+    S.adminUID      = null;
     document.getElementById('adminLock').style.display    = 'flex';
     document.getElementById('adminContent').style.display = 'none';
     if(document.getElementById('adminUser'))  document.getElementById('adminUser').value  = '';
     if(document.getElementById('adminPass'))  document.getElementById('adminPass').value  = '';
-    this.toast('🔒 Sesión cerrada', 'info', 2000);
+    this.toast('Sesión cerrada', 'info', 2000);
     this.go('sHome');
   },
 
@@ -2548,18 +2801,18 @@ const G = {
     const name = (document.getElementById('newUserName')?.value || '').trim();
     const pass = (document.getElementById('newUserPass')?.value || '').trim();
     const role = document.getElementById('newUserRole')?.value || 'delegado';
-    if(!name || !pass){ this.toast('⚠️ Escribe usuario y contraseña', 'error'); return; }
-    if(name.length < 3){ this.toast('⚠️ Mínimo 3 caracteres en el usuario', 'error'); return; }
+    if(!name || !pass){ this.toast('Escribe usuario y contraseña', 'error'); return; }
+    if(name.length < 3){ this.toast('Mínimo 3 caracteres en el usuario', 'error'); return; }
     this._getUsers(users => {
       if(users.find(u => u.name.toLowerCase() === name.toLowerCase())){
-        this.toast('⚠️ Ese usuario ya existe', 'error'); return;
+        this.toast('Ese usuario ya existe', 'error'); return;
       }
       users.push({ id: Date.now(), name, pass, role, createdAt: new Date().toLocaleDateString() });
       this._saveUsers(users);
       document.getElementById('newUserName').value = '';
       document.getElementById('newUserPass').value = '';
       this._renderUsersTable();
-      this.toast(`✅ Usuario "${name}" creado como ${role}`, 'success', 3000);
+      this.toast(` Usuario "${name}" creado como ${role}`, 'success', 3000);
     });
   },
 
@@ -2598,11 +2851,11 @@ const G = {
       if(noMsg) noMsg.style.display = 'none';
       tbody.innerHTML = users.map(u => `
         <tr style="${u.disabled?'opacity:.45':''}">
-          <td><strong>${u.name}</strong>${u.disabled?' <span style="font-family:var(--f-mono);font-size:.6rem;color:#F87171">[inactivo]</span>':''}</td>
-          <td><span style="font-family:var(--f-mono);font-size:.82rem;background:rgba(255,255,255,.06);
+          <td data-label="Usuario"><strong>${u.name}</strong>${u.disabled?' <span style="font-family:var(--f-mono);font-size:.6rem;color:#F87171">[inactivo]</span>':''}</td>
+          <td data-label="Contraseña"><span style="font-family:var(--f-mono);font-size:.82rem;background:rgba(255,255,255,.06);
             padding:3px 8px;border-radius:6px;">${u.pass}</span></td>
-          <td><span class="user-role-badge role-${u.role}">${u.role}</span></td>
-          <td style="display:flex;gap:6px;flex-wrap:wrap">
+          <td data-label="Rol"><span class="user-role-badge role-${u.role}">${u.role}</span></td>
+          <td data-label="Acciones" style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="admin-del-btn" style="border-color:rgba(${u.disabled?'52,211,153':'239,68,68'},.3);color:${u.disabled?'#34D399':'#F87171'}"
               onclick="G.toggleUserDisabled(${u.id})">${u.disabled?'Activar':'Desactivar'}</button>
             <button class="admin-del-btn" onclick="G.deleteUser(${u.id})">Eliminar</button>
@@ -2632,7 +2885,7 @@ const G = {
       div.className='workshop-toggle';
       div.innerHTML=`
         <div class="wt-info">
-          <div class="wt-name">${mod.icon||'📚'} ${mod.name}</div>
+          <div class="wt-name">${mod.icon||''} ${mod.name}</div>
           <div class="wt-sub">${mod.questions?.length||0} preguntas · Nivel ${key==='protocolo'?'Técnico':'Avanzado'}</div>
         </div>
         <label class="toggle-switch">
@@ -2647,7 +2900,7 @@ const G = {
     const cfg=getAdminConfig();
     cfg[key]=enabled;
     saveAdminConfig(cfg);
-    this.toast(`${enabled?'✅ Habilitado':'🔒 Bloqueado'}: ${getQDB()[key]?.name}`,'info');
+    this.toast(`${enabled?' Habilitado':' Bloqueado'}: ${getQDB()[key]?.name}`,'info');
   },
 
   addCustomQ(){
@@ -2668,7 +2921,7 @@ const G = {
         <select class="f-input cq-correct"><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select>
       </div>
       <div class="f-wrap"><input type="text" class="f-input cq-exp" placeholder="Explicación / Análisis..."></div>
-      <button class="del-q" onclick="this.parentElement.remove();G._renumberQs()">✕</button>`;
+      <button class="del-q" onclick="this.parentElement.remove();G._renumberQs()"></button>`;
     list.appendChild(div);
   },
 
@@ -2691,7 +2944,7 @@ const G = {
       questions.push({text,opts,correct,explanation:exp,principle:''});
     }
     const key='custom_'+Date.now();
-    const workshop={name,icon:'📋',desc:`Taller personalizado · ${questions.length} preguntas`,questions,createdAt:new Date().toLocaleDateString('es-DO')};
+    const workshop={name,icon:'',desc:`Taller personalizado · ${questions.length} preguntas`,questions,createdAt:new Date().toLocaleDateString('es-DO')};
     if(db){
       // Save to Firebase — real-time listener will update all devices automatically
       db.ref(`delegame/customWorkshops/${key}`).set(workshop).then(()=>{
