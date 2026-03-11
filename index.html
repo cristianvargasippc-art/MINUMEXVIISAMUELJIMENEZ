@@ -390,18 +390,27 @@ select.f-input{appearance:none;cursor:pointer}
 .home-typo-main{
   font-family:'Syne',sans-serif;
   font-weight:900;
-  /* DELEGAME = 8 chars · cada char ~0.62em con este font
-     Para que nunca desborde: font-size = viewport / (chars × factor)
-     Fórmula: 8 chars × 0.58 = 4.64 → font-size ≤ 100vw/4.64 ≈ 21.5vw
-     Usamos 10.5vw para que quepan los 8 caracteres con padding lateral */
-  font-size: clamp(2.4rem, 10.5vw, 7.5rem);
-  letter-spacing: .04em;          /* positivo = más separación = más ancho, compensado con vw */
+  /*
+   * Escalar para que "DELEGAME" (8 chars) nunca desborde.
+   * Syne 900 tiene un advance-width ~0.72em por carácter mayúscula.
+   * 8 chars × 0.72 = 5.76em de ancho de texto.
+   * Con padding lateral de 32px (16px × 2) el espacio útil es calc(100vw - 32px).
+   * font-size = (100vw - 32px) / 5.76 ≈ 17.36vw - 5.56px
+   * Usamos 16vw con cap de 7rem y mínimo de 2rem para máxima seguridad.
+   */
+  font-size: clamp(2rem, 16vw, 7rem);
+  /* sin letter-spacing — Syne 900 ya tiene buen kerning */
+  letter-spacing: 0;
   color:#fff;
   line-height:1;
   text-align:center;
-  white-space:nowrap;             /* nunca parte la palabra */
+  white-space:nowrap;
+  /* escalar hacia abajo si aun así desborda (fallback) */
   max-width:100%;
-  width:100%;
+  width:fit-content;
+  margin:0 auto;
+  /* escalar el elemento completo si font-size no es suficiente */
+  transform-origin:center center;
   display:block;
   filter:drop-shadow(0 2px 32px rgba(0,0,0,.7)) drop-shadow(0 0 40px rgba(240,192,64,.25));
   animation:heroLogoPulse 4s ease-in-out infinite;
@@ -965,7 +974,7 @@ img, video { max-width: 100%; height: auto; }
 .home-cta  { flex-direction: column; align-items: stretch; }
 @media(min-width:480px){ .home-cta { flex-direction:row; align-items:center; } }
 
-.home-typo-main { font-size: clamp(2.4rem,10.5vw,7.5rem); }
+.home-typo-main { font-size: clamp(2rem,16vw,7rem); letter-spacing:0; }
 .home-typo-sub  { font-size: clamp(.52rem,2vw,.72rem); letter-spacing: clamp(.1em,.5vw,.22em); }
 
 .home-tags { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; padding:0 8px; }
@@ -1128,7 +1137,7 @@ img, video { max-width: 100%; height: auto; }
 /* ── Prevent layout shift on orientation change ── */
 @media(orientation:landscape) and (max-height:500px){
   .home-hero { min-height:auto; padding:16px 0; }
-  .home-typo-main { font-size:clamp(1.8rem,7vh,3.5rem); }
+  .home-typo-main { font-size:clamp(1.5rem,10vh,3.5rem); letter-spacing:0; }
   .load-logo-text { font-size:clamp(2rem,8vh,4rem); }
   .boarding-list { max-height:180px; }
   .admin-lock-badge { width:70px; height:70px; margin-bottom:14px; }
@@ -1969,6 +1978,34 @@ const CIRC    = 144.5;
   // Start video on page load
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', startVid);
+
+    // ── FIT TEXT: garantiza que .home-typo-main nunca desborde su contenedor ──
+    (function fitDelegame(){
+      const fit = () => {
+        const el = document.querySelector('.home-typo-main');
+        if(!el) return;
+        const parent = el.parentElement;
+        const maxW = parent.offsetWidth - 32; // 16px padding cada lado
+        if(maxW <= 0) return;
+        // Reset para medir el tamaño natural
+        el.style.fontSize = '';
+        const natural = el.scrollWidth;
+        if(natural > maxW){
+          const ratio = maxW / natural;
+          const current = parseFloat(getComputedStyle(el).fontSize);
+          el.style.fontSize = Math.floor(current * ratio * 0.97) + 'px';
+        }
+      };
+      // Esperar a que la fuente Syne cargue
+      if(document.fonts && document.fonts.ready){
+        document.fonts.ready.then(fit);
+      }
+      document.addEventListener('DOMContentLoaded', fit);
+      window.addEventListener('resize', fit);
+      window.addEventListener('orientationchange', () => setTimeout(fit, 150));
+      // Seguro extra: correr después de que todo cargue
+      window.addEventListener('load', fit);
+    })();
   } else {
     startVid();
   }
