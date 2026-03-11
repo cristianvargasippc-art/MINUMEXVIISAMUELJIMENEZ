@@ -40,7 +40,8 @@
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html{font-size:16px;scroll-behavior:smooth}
-body{font-family:var(--f-body);background:var(--sky);color:var(--cream);min-height:100vh;overflow-x:hidden}
+body{font-family:var(--f-body);background:var(--sky);color:var(--cream);min-height:100vh;overflow-x:hidden;width:100%}
+#app{position:relative;z-index:1;min-height:100vh;overflow-x:hidden;width:100%}
 
 /* ===== CLOUDS BG ===== */
 .sky-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
@@ -381,17 +382,27 @@ select.f-input{appearance:none;cursor:pointer}
 .home-typo-logo{
   position:relative;z-index:1;
   display:flex;flex-direction:column;align-items:center;
-  gap:6px;
-  padding:8px 0 4px;
+  gap:8px;
+  padding:8px 16px 4px;
+  width:100%;
+  overflow:hidden;
 }
 .home-typo-main{
   font-family:'Syne',sans-serif;
   font-weight:900;
-  font-size:clamp(3.5rem,16vw,7.5rem);
-  letter-spacing:-.03em;
+  /* DELEGAME = 8 chars · cada char ~0.62em con este font
+     Para que nunca desborde: font-size = viewport / (chars × factor)
+     Fórmula: 8 chars × 0.58 = 4.64 → font-size ≤ 100vw/4.64 ≈ 21.5vw
+     Usamos 10.5vw para que quepan los 8 caracteres con padding lateral */
+  font-size: clamp(2.4rem, 10.5vw, 7.5rem);
+  letter-spacing: .04em;          /* positivo = más separación = más ancho, compensado con vw */
   color:#fff;
-  line-height:.95;
+  line-height:1;
   text-align:center;
+  white-space:nowrap;             /* nunca parte la palabra */
+  max-width:100%;
+  width:100%;
+  display:block;
   filter:drop-shadow(0 2px 32px rgba(0,0,0,.7)) drop-shadow(0 0 40px rgba(240,192,64,.25));
   animation:heroLogoPulse 4s ease-in-out infinite;
 }
@@ -403,7 +414,7 @@ select.f-input{appearance:none;cursor:pointer}
 .home-typo-rule{
   display:flex;align-items:center;gap:12px;
   width:min(380px,82vw);
-  margin:4px 0;
+  margin:2px 0;
 }
 .home-typo-line{
   flex:1;height:1px;
@@ -415,11 +426,12 @@ select.f-input{appearance:none;cursor:pointer}
 }
 .home-typo-sub{
   font-family:'JetBrains Mono',monospace;
-  font-size:clamp(.58rem,.9vw,.72rem);
-  letter-spacing:.22em;
+  font-size:clamp(.55rem,2vw,.72rem);
+  letter-spacing:clamp(.1em,.4vw,.22em);
   color:rgba(240,192,64,.65);
   text-align:center;
   text-transform:uppercase;
+  white-space:nowrap;
 }
 .home-runway{
   position:relative;width:100%;height:6px;background:rgba(255,255,255,0.05);
@@ -953,7 +965,7 @@ img, video { max-width: 100%; height: auto; }
 .home-cta  { flex-direction: column; align-items: stretch; }
 @media(min-width:480px){ .home-cta { flex-direction:row; align-items:center; } }
 
-.home-typo-main { font-size: clamp(2.8rem,14vw,7.5rem); }
+.home-typo-main { font-size: clamp(2.4rem,10.5vw,7.5rem); }
 .home-typo-sub  { font-size: clamp(.52rem,2vw,.72rem); letter-spacing: clamp(.1em,.5vw,.22em); }
 
 .home-tags { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; padding:0 8px; }
@@ -1116,7 +1128,7 @@ img, video { max-width: 100%; height: auto; }
 /* ── Prevent layout shift on orientation change ── */
 @media(orientation:landscape) and (max-height:500px){
   .home-hero { min-height:auto; padding:16px 0; }
-  .home-typo-main { font-size:clamp(2rem,8vh,4rem); }
+  .home-typo-main { font-size:clamp(1.8rem,7vh,3.5rem); }
   .load-logo-text { font-size:clamp(2rem,8vh,4rem); }
   .boarding-list { max-height:180px; }
   .admin-lock-badge { width:70px; height:70px; margin-bottom:14px; }
