@@ -1073,7 +1073,7 @@ select.f-input{appearance:none;cursor:pointer}
   </div>
   <div class="mode-grid">
     <div class="mode-card" onclick="G.go('sRegister',{mode:'solo'})">
-      <div class="mode-icon"></div>
+      <div class="mode-icon">🎯</div>
       <div class="mode-title">Vuelo Solo</div>
       <p class="mode-desc">Entrena a tu ritmo como delegado individual. Sin límite de tiempo en sala.</p>
       <div class="btn-group"><span class="badge badge-blue">1 pasajero</span><span class="badge badge-gold">Sin sala</span></div>
@@ -1085,7 +1085,7 @@ select.f-input{appearance:none;cursor:pointer}
       <div class="btn-group"><span class="badge badge-dawn">Piloto</span><span class="badge badge-blue">Hasta 30</span></div>
     </div>
     <div class="mode-card" onclick="G.go('sJoin')">
-      <div class="mode-icon"></div>
+      <div class="mode-icon">🚀</div>
       <div class="mode-title">Unirse al Vuelo</div>
       <p class="mode-desc">¿Tienes el código de sala? Aborda como pasajero y compite en tiempo real.</p>
       <div class="btn-group"><span class="badge badge-gold">Código requerido</span></div>
@@ -1962,23 +1962,54 @@ const G = {
     if(!name||!ctry||!code){ this.toast('Completa todos los campos.','warn'); return; }
     if(code.length!==6){ this.toast('El código debe tener 6 caracteres.','warn'); return; }
     if(!db){ this.toast('⚠ Firebase no configurado.','warn',5000); return; }
+
+    // ID ESTABLE: basado en nombre+país — si la misma persona vuelve,
+    // sobrescribe su slot anterior en vez de crear uno nuevo
+    const stableId = btoa(unescape(encodeURIComponent(
+      (name + '_' + ctry).toLowerCase().replace(/\s+/g,'_')
+    ))).replace(/[^a-zA-Z0-9]/g,'').slice(0,20);
+
     db.ref(`rooms/${code}`).once('value').then(snap=>{
-      if(!snap.exists()){ this.toast('❌ Sala no encontrada. Verifica el código.','error'); return; }
-      // Check for duplicate country in this room
+      if(!snap.exists()){ this.toast('Sala no encontrada. Verifica el código.','error'); return; }
       const players = snap.val()?.players || {};
-      const dupCountry = Object.values(players).find(p =>
+
+      // Verificar país duplicado — ignorar si ES el mismo jugador reconectando
+      const dupCountry = Object.entries(players).find(([id, p]) =>
+        id !== stableId &&
         p.country && p.country.toLowerCase() === ctry.toLowerCase()
       );
       if(dupCountry){
-        this.toast(`❌ "${ctry}" ya está en esta sala. Elige otro país o institución.`, 'error', 5000);
-        // Highlight the country field
+        this.toast(`"${ctry}" ya está ocupado en esta sala. Elige un país diferente.`, 'error', 5000);
         const el = document.getElementById('jCountry');
         if(el){ el.style.borderColor='#EF4444'; setTimeout(()=>el.style.borderColor='',3000); }
         return;
       }
-      S.player.name=name; S.player.country=ctry; S.mode='player'; S.room=code; S.playerId=randId();
-      db.ref(`rooms/${code}/players/${S.playerId}`).set({name,country:ctry,avatar:av,score:0,streak:0,avatarKey:S.player.avatarKey||'d0'});
-      document.getElementById('wpRoomCode').textContent=code;
+
+      // Verificar nombre duplicado — misma lógica
+      const dupName = Object.entries(players).find(([id, p]) =>
+        id !== stableId &&
+        p.name && p.name.toLowerCase() === name.toLowerCase()
+      );
+      if(dupName){
+        this.toast(`"${name}" ya está en esta sala. Usa un nombre diferente.`, 'error', 5000);
+        const el = document.getElementById('jName');
+        if(el){ el.style.borderColor='#EF4444'; setTimeout(()=>el.style.borderColor='',3000); }
+        return;
+      }
+
+      S.player.name=name; S.player.country=ctry; S.mode='player'; S.room=code; S.playerId=stableId;
+      const playerRef = db.ref(`rooms/${code}/players/${stableId}`);
+
+      // onDisconnect: al cerrar el navegador o perder conexión, borrarse automáticamente
+      playerRef.onDisconnect().remove();
+
+      // Guardar jugador (sobrescribe si era reconexión)
+      playerRef.set({
+        name, country: ctry, avatar: av, score: 0, streak: 0,
+        avatarKey: S.player.avatarKey || 'd0', joinedAt: Date.now()
+      });
+
+      document.getElementById('wpRoomCode').textContent = code;
       this.go('sWaitingPlayer');
       this._listenAsPlayer();
     });
@@ -2032,6 +2063,10 @@ const G = {
 
   _listenAsPlayer(){
     if(!db) return;
+    // Re-activar onDisconnect en caso de reconexión
+    if(S.playerId && S.room){
+      db.ref(`rooms/${S.room}/players/${S.playerId}`).onDisconnect().remove();
+    }
     db.ref(`rooms/${S.room}/status`).on('value',snap=>{
       if(snap.val()==='started'){
         db.ref(`rooms/${S.room}/module`).once('value').then(s=>{
@@ -2065,6 +2100,16 @@ const G = {
         ${showRole?`<div class="pax-role"><span class="badge badge-green">A bordo</span></div>`:''}`;
       el.appendChild(d);
     });
+  },
+
+  leaveRoom(){
+    // Borrar al jugador de Firebase antes de salir — evita fantasmas
+    if(db && S.room && S.playerId && S.playerId !== 'HOST'){
+      db.ref(`rooms/${S.room}/players/${S.playerId}`).onDisconnect().cancel();
+      db.ref(`rooms/${S.room}/players/${S.playerId}`).remove();
+    }
+    S.room = null; S.playerId = null; S.mode = 'solo';
+    this.go('sHome');
   },
 
   hostLaunch(mod){
