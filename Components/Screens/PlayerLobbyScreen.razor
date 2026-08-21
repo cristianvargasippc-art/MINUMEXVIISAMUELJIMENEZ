@@ -1,0 +1,26 @@
+@inherits ScreenBase
+
+<div class="@ScreenClass">
+    @if (Flow.Room is { } room)
+    {
+        <div style="margin-top:32px;text-align:center">
+            <div class="eyebrow">A bordo del vuelo</div>
+            <h2 class="big-title">Sala <em>@room.Code</em></h2>
+            <div style="font-size:5rem;margin:28px 0;animation:planeBounce 1.5s ease-in-out infinite">✈</div>
+            <p class="body-text">
+                El piloto lanzará el vuelo en breve.<br>
+                Abróchate el cinturón — cuando despegue, ¡no se para!
+            </p>
+            <div style="margin-top:20px">
+                <BoardingList Players="room.Ordered" />
+            </div>
+            <div class="btn-group" style="justify-content:center;margin-top:22px">
+                <button type="button" class="btn btn-ghost btn-sm" @onclick="Flow.LeaveRoom">Abandonar vuelo</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    protected override Screen Id => Screen.PlayerLobby;
+}

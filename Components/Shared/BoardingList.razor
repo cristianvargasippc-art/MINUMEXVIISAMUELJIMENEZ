@@ -1,0 +1,31 @@
+<div class="boarding-list">
+    @foreach (var passenger in Players)
+    {
+        <div class="pax-row" @key="passenger.Id">
+            <div class="pax-avatar @(passenger.IsHost ? "pilot" : "")">
+                <AvatarCircle Uri="@passenger.AvatarUri" Size="36" Extra="width:100%;height:100%;" />
+            </div>
+            <div class="pax-info">
+                <div class="pax-name">
+                    @passenger.Name
+                    @if (passenger.IsHost)
+                    {
+                        <span class="badge badge-dawn" style="font-size:.55rem">PILOTO</span>
+                    }
+                </div>
+                <div class="pax-country">@passenger.Country</div>
+            </div>
+            @if (ShowStatus)
+            {
+                <div class="pax-role">
+                    <span class="badge badge-green">A bordo</span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<RoomPlayer> Players { get; set; } = [];
+    [Parameter] public bool ShowStatus { get; set; }
+}

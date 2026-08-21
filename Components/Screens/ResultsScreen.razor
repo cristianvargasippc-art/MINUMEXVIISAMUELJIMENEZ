@@ -1,0 +1,67 @@
+@inherits ScreenBase
+
+<div class="@ScreenClass">
+    @if (Flow.Game is { } game)
+    {
+        var grade = Grade.For(game.Accuracy);
+
+        <div class="cert">
+            <div class="cert-seal">@grade.Seal</div>
+
+            <div style="text-align:center;margin-bottom:14px">
+                <div class="eyebrow">Certificado de Evaluación · DELEGAME Airlines</div>
+                <div class="big-title" style="font-size:1.6rem;margin-top:8px">
+                    <AvatarCircle Uri="@Flow.Player.AvatarUri" Size="32"
+                                  Extra="margin-right:8px;border:2px solid var(--gold);" />
+                    @Flow.Player.Name
+                </div>
+                <div style="color:var(--silver);font-size:.83rem;margin-top:4px">
+                    @game.Workshop.Name · @Flow.Player.Country
+                </div>
+            </div>
+
+            <div class="cert-score">@game.Score.ToString("N0", CultureInfo.CurrentCulture)</div>
+            <div style="text-align:center;font-family:var(--f-mono);font-size:.65rem;letter-spacing:.2em;color:var(--silver);margin-top:4px;margin-bottom:24px">
+                PUNTOS TOTALES
+            </div>
+
+            <div class="res-grid">
+                <div class="res-cell">
+                    <div class="res-num" style="color:var(--green)">@game.Correct</div>
+                    <div class="res-lbl">Correctas</div>
+                </div>
+                <div class="res-cell">
+                    <div class="res-num" style="color:var(--red)">@game.Wrong</div>
+                    <div class="res-lbl">Incorrectas</div>
+                </div>
+                <div class="res-cell">
+                    <div class="res-num">@game.Accuracy%</div>
+                    <div class="res-lbl">Eficacia</div>
+                </div>
+            </div>
+
+            @if (Flow.Room is { } room && room.Players.Count > 1)
+            {
+                <div style="margin-bottom:20px">
+                    <div class="eyebrow">Tabla Final del Vuelo</div>
+                    <LeaderboardView Players="room.Ranked" Limit="int.MaxValue" />
+                </div>
+            }
+
+            <div class="eval-panel">
+                <div class="eval-title">@grade.Title</div>
+                <div class="eval-text">@grade.Description</div>
+            </div>
+
+            <div class="btn-group" style="justify-content:center">
+                <button type="button" class="btn btn-gold" @onclick="Flow.Retry">↩ Reintentar Vuelo</button>
+                <button type="button" class="btn btn-blue" @onclick="() => Flow.Go(Screen.Modules)">⊞ Otro Taller</button>
+                <button type="button" class="btn btn-ghost" @onclick="() => Flow.Go(Screen.Home)">⌂ Terminal</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    protected override Screen Id => Screen.Results;
+}

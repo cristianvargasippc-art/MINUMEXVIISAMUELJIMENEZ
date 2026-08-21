@@ -1,0 +1,382 @@
+@inherits ScreenBase
+@inject UserService Users
+@inject WorkshopService Workshops
+@inject ToastService Toasts
+
+<div class="@ScreenClass">
+    @if (!Flow.IsAdmin)
+    {
+        <div class="admin-lock" style="display:flex">
+            <div class="admin-lock-badge">
+                <div class="admin-lock-badge-ring"></div>
+                <div class="admin-lock-badge-ring2"></div>
+                <div class="admin-lock-icon-inner" style="font-family:var(--f-head);font-size:2rem;color:var(--gold);letter-spacing:-.02em">SGA</div>
+            </div>
+
+            <div class="admin-lock-title">Panel de Control</div>
+            <div class="admin-lock-sub">DELEGAME · Acceso Restringido</div>
+
+            <div class="admin-login-card @(_shake ? "shake" : "")">
+                <div class="admin-input-group">
+                    <span class="admin-input-icon" style="font-size:.8rem;font-family:var(--f-mono)">@@</span>
+                    <input type="text" class="admin-f-input" placeholder="Usuario" autocomplete="username"
+                           value="@_loginUser" @oninput="e => _loginUser = e.Value?.ToString() ?? string.Empty"
+                           @onkeydown="OnLoginKey" />
+                </div>
+                <div class="admin-input-group">
+                    <span class="admin-input-icon" style="font-size:.8rem;font-family:var(--f-mono)">••</span>
+                    <input type="password" class="admin-f-input" placeholder="Contraseña" autocomplete="current-password"
+                           value="@_loginPass" @oninput="e => _loginPass = e.Value?.ToString() ?? string.Empty"
+                           @onkeydown="OnLoginKey" />
+                </div>
+                <button type="button" class="admin-submit-btn" @onclick="Login">INGRESAR AL PANEL →</button>
+            </div>
+
+            <button type="button" class="btn btn-ghost btn-sm" style="margin-top:20px" @onclick="() => Flow.Go(Screen.Home)">← Volver</button>
+        </div>
+    }
+    else
+    {
+        <div style="margin-top:24px;margin-bottom:8px">
+            <div class="eyebrow">Panel de Control</div>
+            <h2 class="big-title">Admin <em>SGA</em></h2>
+            <div style="font-size:.9rem;color:var(--gold);margin-top:4px;font-weight:600;letter-spacing:1px;text-transform:uppercase">
+                Sesión: @Flow.Admin!.Name
+            </div>
+            <div class="divider"><div class="diamond"></div></div>
+        </div>
+
+        @if (Flow.IsMasterAdmin)
+        {
+            <div class="admin-panel">
+                <div class="admin-title">Gestión de Usuarios</div>
+                <p style="font-size:.82rem;color:var(--silver);margin-bottom:14px">
+                    Crea usuarios con contraseña. Las contraseñas se guardan cifradas: si un delegado la olvida, genera una nueva desde la tabla.
+                </p>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:16px">
+                    <div>
+                        <label class="f-label" for="newUserName">Usuario</label>
+                        <input type="text" id="newUserName" class="f-input" placeholder="Ej: maria.garcia" maxlength="30"
+                               style="margin-top:4px" value="@_newName"
+                               @oninput="e => _newName = e.Value?.ToString() ?? string.Empty" />
+                    </div>
+                    <div>
+                        <label class="f-label" for="newUserPass">Contraseña</label>
+                        <div style="position:relative">
+                            <input type="text" id="newUserPass" class="f-input" placeholder="Mínimo 6 caracteres" maxlength="30"
+                                   style="margin-top:4px;padding-right:44px" value="@_newPass"
+                                   @oninput="e => _newPass = e.Value?.ToString() ?? string.Empty" />
+                            <button type="button" title="Generar contraseña" @onclick="() => _newPass = PasswordHasher.Generate()"
+                                    style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.95rem;color:var(--gold)">
+                                ⟳
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="f-label" for="newUserRole">Rol</label>
+                        <select id="newUserRole" class="f-input" style="margin-top:4px"
+                                value="@_newRole" @onchange="OnRoleChanged">
+                            <option value="anfitrion">Anfitrión (crea talleres)</option>
+                            <option value="delegado">Delegado</option>
+                            <option value="piloto">Piloto</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-gold" style="width:100%;margin-bottom:16px" @onclick="CreateUser">
+                    ＋ Crear Usuario
+                </button>
+
+                @if (Users.All().Count == 0)
+                {
+                    <p class="empty-note">No hay usuarios creados. Agrega el primero arriba.</p>
+                }
+                else
+                {
+                    <table class="admin-users-table">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Contraseña</th>
+                                <th>Rol</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Users.All())
+                            {
+                                <tr style="@(user.Disabled ? "opacity:.45" : "")" @key="user.Id">
+                                    <td data-label="Usuario">
+                                        <strong>@user.Name</strong>
+                                        @if (user.Disabled)
+                                        {
+                                            <span style="font-family:var(--f-mono);font-size:.6rem;color:#F87171">[inactivo]</span>
+                                        }
+                                    </td>
+                                    <td data-label="Contraseña">
+                                        @if (_revealed.TryGetValue(user.Id, out var fresh))
+                                        {
+                                            <span class="pass-reveal">@fresh</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="pass-hidden">••••••••</span>
+                                        }
+                                    </td>
+                                    <td data-label="Rol">
+                                        <span class="user-role-badge role-@user.Role">@user.Role</span>
+                                    </td>
+                                    <td data-label="Acciones" style="display:flex;gap:6px;flex-wrap:wrap">
+                                        <button type="button" class="admin-del-btn" @onclick="() => ResetPassword(user)">Nueva clave</button>
+                                        @if (!user.IsMaster)
+                                        {
+                                            <button type="button" class="admin-del-btn"
+                                                    style="border-color:rgba(@(user.Disabled ? "52,211,153" : "239,68,68"),.3);color:@(user.Disabled ? "#34D399" : "#F87171")"
+                                                    @onclick="() => ToggleUser(user)">
+                                                @(user.Disabled ? "Activar" : "Desactivar")
+                                            </button>
+                                            <button type="button" class="admin-del-btn" @onclick="() => DeleteUser(user)">Eliminar</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        }
+
+        <div class="admin-panel" style="margin-top:16px">
+            <div class="admin-title">Control de Talleres</div>
+            @foreach (var workshop in Workshops.All())
+            {
+                <div class="workshop-toggle" @key="workshop.Key">
+                    <div class="wt-info">
+                        <div class="wt-name">@workshop.Name</div>
+                        <div class="wt-sub">@workshop.Questions.Count preguntas · Nivel @workshop.Level</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked="@Workshops.IsEnabled(workshop.Key)"
+                               @onchange="e => ToggleWorkshop(workshop, e)" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            }
+        </div>
+
+        <div class="admin-panel" style="margin-top:16px">
+            <div class="admin-title">Editor de Talleres Personalizados</div>
+            <div class="f-wrap">
+                <label class="f-label" for="newWorkshopName">Nombre del taller</label>
+                <input type="text" id="newWorkshopName" class="f-input" placeholder="Ej: Resoluciones de Paz" maxlength="50"
+                       value="@_draftName" @oninput="e => _draftName = e.Value?.ToString() ?? string.Empty" />
+            </div>
+
+            @for (var i = 0; i < _drafts.Count; i++)
+            {
+                var index = i;
+                var draft = _drafts[index];
+
+                <div class="q-item" @key="draft">
+                    <div class="q-item-num">PREGUNTA @(index + 1)</div>
+                    <div class="f-wrap">
+                        <input type="text" class="f-input" placeholder="Texto de la pregunta..." style="margin-bottom:6px"
+                               value="@draft.Text" @oninput="e => draft.Text = e.Value?.ToString() ?? string.Empty" />
+                    </div>
+                    <div class="f-wrap">
+                        @for (var o = 0; o < 4; o++)
+                        {
+                            var option = o;
+                            <input type="text" class="f-input" placeholder="Opción @(OptionLetters[option])" style="margin-bottom:4px"
+                                   value="@draft.Options[option]"
+                                   @oninput="e => draft.Options[option] = e.Value?.ToString() ?? string.Empty" />
+                        }
+                    </div>
+                    <div class="f-wrap">
+                        <label class="f-label">Opción correcta</label>
+                        <select class="f-input" value="@draft.Correct"
+                                @onchange="e => draft.Correct = int.TryParse(e.Value?.ToString(), out var v) ? v : 0">
+                            @for (var o = 0; o < 4; o++)
+                            {
+                                <option value="@o">@OptionLetters[o]</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="f-wrap">
+                        <input type="text" class="f-input" placeholder="Explicación / Análisis..."
+                               value="@draft.Explanation" @oninput="e => draft.Explanation = e.Value?.ToString() ?? string.Empty" />
+                    </div>
+                    <button type="button" class="del-q" @onclick="() => _drafts.RemoveAt(index)">Eliminar</button>
+                </div>
+            }
+
+            <button type="button" class="btn btn-ghost btn-sm" style="margin-bottom:12px" @onclick="() => _drafts.Add(new QuestionDraft())">
+                + Agregar Pregunta
+            </button>
+
+            <div class="btn-group">
+                <button type="button" class="btn btn-gold" @onclick="SaveWorkshop">Guardar Taller</button>
+                <button type="button" class="btn btn-ghost" @onclick="ClearDraft">Limpiar</button>
+            </div>
+        </div>
+
+        <div class="admin-panel" style="margin-top:16px">
+            <div class="admin-title">Talleres Guardados</div>
+            @if (Workshops.Custom().Count == 0)
+            {
+                <p class="empty-note">No hay talleres personalizados. Crea uno arriba.</p>
+            }
+            else
+            {
+                @foreach (var workshop in Workshops.Custom())
+                {
+                    <div class="workshop-toggle" @key="workshop.Key">
+                        <div class="wt-info">
+                            <div class="wt-name">@workshop.Name</div>
+                            <div class="wt-sub">
+                                @workshop.Questions.Count preguntas · @workshop.CreatedAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture)
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-red btn-sm" @onclick="() => DeleteWorkshop(workshop)">Eliminar</button>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="btn-group" style="margin-top:20px">
+            <button type="button" class="btn btn-ghost" @onclick="Flow.AdminLogout">Cerrar Sesión</button>
+            <button type="button" class="btn btn-ghost" @onclick="() => Flow.Go(Screen.Home)">← Terminal</button>
+        </div>
+    }
+</div>
+
+@code {
+    protected override Screen Id => Screen.Admin;
+
+    private static readonly string[] OptionLetters = ["A", "B", "C", "D"];
+
+    private readonly List<QuestionDraft> _drafts = [];
+    private readonly Dictionary<string, string> _revealed = [];
+
+    private string _loginUser = string.Empty;
+    private string _loginPass = string.Empty;
+    private bool _shake;
+
+    private string _newName = string.Empty;
+    private string _newPass = string.Empty;
+    private string _newRole = "anfitrion";
+    private string _draftName = string.Empty;
+
+    private void OnRoleChanged(ChangeEventArgs e)
+    {
+        var role = e.Value?.ToString();
+        _newRole = string.IsNullOrEmpty(role) ? "delegado" : role;
+    }
+
+    private async Task OnLoginKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await Login();
+    }
+
+    private async Task Login()
+    {
+        if (string.IsNullOrWhiteSpace(_loginUser) || string.IsNullOrWhiteSpace(_loginPass))
+        {
+            Toasts.Warn("Completa usuario y contraseña.");
+            return;
+        }
+
+        var result = Flow.AdminLogin(_loginUser, _loginPass);
+        _loginPass = string.Empty;
+
+        if (result.Success) return;
+
+        _shake = true;
+        StateHasChanged();
+        await Task.Delay(500);
+        _shake = false;
+    }
+
+    private void CreateUser()
+    {
+        var result = Users.Create(_newName.Trim(), _newPass.Trim(), _newRole);
+
+        if (!result.Success)
+        {
+            Toasts.Error(result.Message);
+            return;
+        }
+
+        _revealed[result.User!.Id] = _newPass.Trim();
+        _newName = string.Empty;
+        _newPass = string.Empty;
+        Toasts.Success(result.Message, 3000);
+    }
+
+    private void ResetPassword(AppUser user)
+    {
+        _revealed[user.Id] = Users.ResetPassword(user.Id);
+        Toasts.Success($"Nueva contraseña de \"{user.Name}\": {_revealed[user.Id]}", 8000);
+    }
+
+    private void ToggleUser(AppUser user)
+    {
+        Users.ToggleDisabled(user.Id);
+        Toasts.Info(user.Disabled ? $"Cuenta \"{user.Name}\" activada" : $"Cuenta \"{user.Name}\" desactivada", 2000);
+    }
+
+    private void DeleteUser(AppUser user)
+    {
+        Users.Delete(user.Id);
+        _revealed.Remove(user.Id);
+        Toasts.Info("Usuario eliminado", 2000);
+    }
+
+    private void ToggleWorkshop(Workshop workshop, ChangeEventArgs e)
+    {
+        var enabled = e.Value is bool value && value;
+        Workshops.SetEnabled(workshop.Key, enabled);
+        Toasts.Info($"{(enabled ? "Habilitado" : "Bloqueado")}: {workshop.Name}");
+    }
+
+    private void SaveWorkshop()
+    {
+        var name = _draftName.Trim();
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            Toasts.Warn("Ingresa el nombre del taller.");
+            return;
+        }
+
+        if (_drafts.Count < 2)
+        {
+            Toasts.Warn("Agrega mínimo 2 preguntas.");
+            return;
+        }
+
+        if (_drafts.Any(d => !d.IsComplete))
+        {
+            Toasts.Warn("Completa todos los campos de la pregunta.");
+            return;
+        }
+
+        var workshop = Workshops.Create(name, [.. _drafts.Select(d => d.ToQuestion())]);
+        Toasts.Success($"Taller \"{workshop.Name}\" guardado ({workshop.Questions.Count} preguntas)", 4000);
+        ClearDraft();
+    }
+
+    private void ClearDraft()
+    {
+        _draftName = string.Empty;
+        _drafts.Clear();
+    }
+
+    private void DeleteWorkshop(Workshop workshop)
+    {
+        Workshops.Delete(workshop.Key);
+        Toasts.Info($"Taller \"{workshop.Name}\" eliminado");
+    }
+}

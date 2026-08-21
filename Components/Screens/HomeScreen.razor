@@ -1,0 +1,83 @@
+@inherits ScreenBase
+
+<div class="@ScreenClass">
+    <div class="home-hero">
+        <div class="home-logo-header">
+            <div class="home-logo-bg">
+                <div class="home-logo-beam home-logo-beam-l"></div>
+                <div class="home-logo-beam home-logo-beam-r"></div>
+                <div class="home-logo-stars-row">
+                    <span class="hls"></span><span class="hls">·</span>
+                    <span class="hls"></span><span class="hls">·</span>
+                    <span class="hls"></span>
+                </div>
+            </div>
+            <div class="home-typo-logo">
+                <div class="home-typo-main">DELE<em>GAME</em></div>
+                <div class="home-typo-rule">
+                    <div class="home-typo-line"></div>
+                    <span class="home-typo-diamond">◆</span>
+                    <div class="home-typo-line"></div>
+                </div>
+                <div class="home-typo-sub">ACADEMIA DIPLOMÁTICA · MINUME XVII</div>
+            </div>
+            <div class="home-logo-rule">
+                <div class="home-logo-rule-line"></div>
+                <div class="home-logo-rule-diamond">◆</div>
+                <div class="home-logo-rule-line"></div>
+            </div>
+        </div>
+
+        <div class="home-runway">
+            <div class="runway-plane">✈</div>
+        </div>
+
+        <div class="home-tags">
+            <span class="tag">Rep. Dominicana</span>
+            <span class="tag">DELEGAME Airlines</span>
+            <span class="tag">Derecho Internacional</span>
+            <span class="tag">Multijugador Real</span>
+        </div>
+
+        <div class="eyebrow">DELEGAME · Programa de Formación</div>
+        <h1 class="big-title" style="text-align:center">Academia<br>de <em>Diplomáticos</em></h1>
+        <div class="divider"><div class="diamond"></div></div>
+        <p class="body-text">
+            Aborda como pasajero o como piloto. Tres módulos de entrenamiento en oratoria,
+            negociación y protocolo. Cada pregunta correcta te acerca más a DELEGAME.
+        </p>
+        <div class="home-cta">
+            <button type="button" class="btn btn-gold btn-lg" @onclick="() => Flow.Go(Screen.ModeSelect)">Abordar →</button>
+            <button type="button" class="btn btn-ghost" @onclick="() => Flow.Go(Screen.Admin)">Admin Panel</button>
+        </div>
+        <div class="airport-grid">
+            <div class="airport-cell">
+                <div class="airport-code">SDQ</div>
+                <div class="airport-name">Punto de Partida</div>
+            </div>
+            <div class="airport-cell">
+                <div class="airport-code">✈</div>
+                <div class="airport-name">@Total.Modules Módulos · @Total.Questions Preguntas</div>
+            </div>
+            <div class="airport-cell">
+                <div class="airport-code">MUN</div>
+                <div class="airport-name">DELEGAME</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override Screen Id => Screen.Home;
+
+    [Inject] private WorkshopService Workshops { get; set; } = default!;
+
+    private (int Modules, int Questions) Total
+    {
+        get
+        {
+            var enabled = Workshops.Enabled();
+            return (enabled.Count, enabled.Sum(w => w.Questions.Count));
+        }
+    }
+}

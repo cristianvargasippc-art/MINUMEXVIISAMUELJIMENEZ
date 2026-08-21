@@ -1,0 +1,79 @@
+@inherits ScreenBase
+@inject RoomService Rooms
+
+<div class="@ScreenClass">
+    <div style="margin-top:32px">
+        <div class="eyebrow">Multijugador — Pasajero</div>
+        <h2 class="big-title">Abordar <em>Vuelo</em></h2>
+        <div class="divider"><div class="diamond"></div></div>
+    </div>
+
+    <div class="card">
+        <div class="f-wrap">
+            <label class="f-label" for="jName">Tu Nombre</label>
+            <input type="text" id="jName" class="f-input" placeholder="Tu nombre de delegado" maxlength="40"
+                   value="@Flow.Player.Name" @oninput="e => Flow.Player.Name = e.Value?.ToString() ?? string.Empty" />
+        </div>
+
+        <div class="f-wrap">
+            <label class="f-label">Avatar de Delegado</label>
+            <p class="hint-text">Selecciona tu representación visual</p>
+            <AvatarPicker SelectedKey="@Flow.Player.AvatarKey" OnSelected="Flow.SetAvatar" />
+        </div>
+
+        <div class="f-wrap">
+            <label class="f-label" for="jCountry">Tu País</label>
+            <input type="text" id="jCountry" class="f-input" placeholder="Ej: Colombia" maxlength="30"
+                   value="@Flow.Player.Country" @oninput="OnCountryInput" />
+            @if (_countryTaken)
+            {
+                <div class="country-warn">Este país ya está en la sala — elige uno diferente</div>
+            }
+        </div>
+
+        <div class="f-wrap">
+            <label class="f-label" for="jCode">Código de Sala (código del piloto)</label>
+            <input type="text" id="jCode" class="f-input" placeholder="ABC123" maxlength="6"
+                   style="font-family:var(--f-head);font-size:1.8rem;letter-spacing:.2em;text-transform:uppercase"
+                   value="@_code" @oninput="OnCodeInput" />
+        </div>
+
+        <div class="btn-group">
+            <button type="button" class="btn btn-gold btn-lg" @onclick="() => Flow.JoinRoom(_code)">Abordar →</button>
+            <button type="button" class="btn btn-ghost" @onclick="() => Flow.Go(Screen.ModeSelect)">← Volver</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override Screen Id => Screen.Join;
+
+    private string _code = string.Empty;
+    private bool _countryTaken;
+
+    private void OnCountryInput(ChangeEventArgs e)
+    {
+        Flow.Player.Country = e.Value?.ToString() ?? string.Empty;
+        CheckCountry();
+    }
+
+    private void OnCodeInput(ChangeEventArgs e)
+    {
+        _code = (e.Value?.ToString() ?? string.Empty).ToUpperInvariant();
+        CheckCountry();
+    }
+
+    private void CheckCountry()
+    {
+        var country = Flow.Player.Country.Trim();
+        if (_code.Length != 6 || country.Length < 2)
+        {
+            _countryTaken = false;
+            return;
+        }
+
+        var room = Rooms.Find(_code);
+        _countryTaken = room is not null
+            && Rooms.CountryTaken(room, RoomService.StableId(Flow.Player.Name, country), country);
+    }
+}

@@ -1,0 +1,48 @@
+@inherits ScreenBase
+
+<div class="@ScreenClass">
+    <div style="margin-top:32px">
+        <div class="eyebrow">Selección de Vuelo</div>
+        <h2 class="big-title">¿Cuál es tu <em>rol</em>?</h2>
+        <div class="divider"><div class="diamond"></div></div>
+    </div>
+
+    <div class="mode-grid">
+        <div class="mode-card" @onclick="() => Flow.SelectMode(GameMode.Solo)">
+            <div class="mode-icon">◎</div>
+            <div class="mode-title">Vuelo Solo</div>
+            <p class="mode-desc">Entrena a tu ritmo como delegado individual. Sin límite de tiempo en sala.</p>
+            <div class="btn-group">
+                <span class="badge badge-blue">1 pasajero</span>
+                <span class="badge badge-gold">Sin sala</span>
+            </div>
+        </div>
+
+        <div class="mode-card" @onclick="() => Flow.SelectMode(GameMode.Host)">
+            <div class="mode-icon">✈</div>
+            <div class="mode-title">Ser Piloto (Host)</div>
+            <p class="mode-desc">Lidera tu delegación. Crea la sala, recibes el código y lanzas el taller cuando todos aborden.</p>
+            <div class="btn-group">
+                <span class="badge badge-dawn">Piloto</span>
+                <span class="badge badge-blue">Hasta 500</span>
+            </div>
+        </div>
+
+        <div class="mode-card" @onclick="() => Flow.SelectMode(GameMode.Player)">
+            <div class="mode-icon">◈</div>
+            <div class="mode-title">Unirse al Vuelo</div>
+            <p class="mode-desc">¿Tienes el código de sala? Aborda como pasajero y compite en tiempo real.</p>
+            <div class="btn-group">
+                <span class="badge badge-gold">Código requerido</span>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top:20px">
+        <button type="button" class="btn btn-ghost btn-sm" @onclick="() => Flow.Go(Screen.Home)">← Volver</button>
+    </div>
+</div>
+
+@code {
+    protected override Screen Id => Screen.ModeSelect;
+}

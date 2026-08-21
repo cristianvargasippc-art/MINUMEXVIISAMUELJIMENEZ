@@ -1,0 +1,16 @@
+@if (string.IsNullOrEmpty(Uri))
+{
+    <span class="av-circle av-circle-empty" style="@Dimensions @Extra">?</span>
+}
+else
+{
+    <span class="av-circle" style="@Dimensions background-image:url('@Uri');@Extra"></span>
+}
+
+@code {
+    [Parameter] public string? Uri { get; set; }
+    [Parameter] public int Size { get; set; } = 32;
+    [Parameter] public string Extra { get; set; } = string.Empty;
+
+    private string Dimensions => FormattableString.Invariant($"width:{Size}px;height:{Size}px;font-size:{Size * 0.4:0}px;");
+}

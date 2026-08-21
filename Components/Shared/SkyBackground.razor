@@ -1,0 +1,59 @@
+<div class="sky-bg"></div>
+
+<div class="stars">
+    @foreach (var star in _stars)
+    {
+        <span class="star" style="@star"></span>
+    }
+</div>
+
+<div class="cloud c1"></div>
+<div class="cloud c2"></div>
+<div class="cloud c3"></div>
+<div class="cloud c4"></div>
+
+<div class="particles">
+    @foreach (var particle in _particles)
+    {
+        <span class="particle" style="@particle"></span>
+    }
+</div>
+
+@code {
+    private const int StarCount = 120;
+    private const int ParticleCount = 80;
+
+    private readonly List<string> _stars = [];
+    private readonly List<string> _particles = [];
+
+    protected override void OnInitialized()
+    {
+        var random = Random.Shared;
+
+        for (var i = 0; i < StarCount; i++)
+        {
+            var size = random.NextDouble() * 2 + 1;
+            var opacity = random.NextDouble() * .5 + .1;
+            var top = random.NextDouble() * 100;
+            var left = random.NextDouble() * 100;
+            var duration = 2 + random.NextDouble() * 4;
+            var delay = random.NextDouble() * 3;
+
+            _stars.Add(FormattableString.Invariant(
+                $"width:{size:0.##}px;height:{size:0.##}px;background:rgba(255,255,255,{opacity:0.##});top:{top:0.##}%;left:{left:0.##}%;animation-duration:{duration:0.##}s;animation-delay:{delay:0.##}s"));
+        }
+
+        for (var i = 0; i < ParticleCount; i++)
+        {
+            var size = random.NextDouble() * 2.8 + 0.6;
+            var tint = random.NextDouble() > .8 ? "240,192,64" : "21,99,200";
+            var opacity = random.NextDouble() * .3 + .06;
+            var left = random.NextDouble() * 100;
+            var duration = 18 + random.NextDouble() * 26;
+            var delay = random.NextDouble() * 40;
+
+            _particles.Add(FormattableString.Invariant(
+                $"width:{size:0.##}px;height:{size:0.##}px;background:rgba({tint},{opacity:0.##});left:{left:0.##}%;animation-duration:{duration:0.##}s;animation-delay:-{delay:0.##}s"));
+        }
+    }
+}

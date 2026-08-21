@@ -1,0 +1,19 @@
+@implements IDisposable
+@inject ToastService Toasts
+
+<div id="toasts">
+    @foreach (var toast in Toasts.Current)
+    {
+        <div class="@toast.CssClass" @key="toast.Id" style="@(toast.Leaving ? "opacity:0;transform:translateX(24px);transition:all .3s" : "")">
+            @toast.Message
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized() => Toasts.Changed += Refresh;
+
+    private Task Refresh() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Toasts.Changed -= Refresh;
+}

@@ -1,0 +1,55 @@
+@inherits ScreenBase
+@inject WorkshopService Workshops
+
+<div class="@ScreenClass">
+    @if (Flow.Room is { } room)
+    {
+        <div style="margin-top:32px;text-align:center">
+            <div class="eyebrow">Sala de Embarque — Piloto</div>
+            <h2 class="big-title">Código de <em>Vuelo</em></h2>
+            <div class="room-code-display">@room.Code</div>
+            <p class="body-text">Comparte este código con tus pasajeros. Selecciona el módulo cuando estén todos a bordo.</p>
+
+            <div style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap">
+                <span style="font-family:var(--f-mono);font-size:.75rem;color:var(--silver)">
+                    @room.Players.Count / @room.MaxPlayers a bordo
+                </span>
+                <div class="room-cap">
+                    <label class="room-cap-label" for="roomMax">CUPO MÁXIMO</label>
+                    <input type="number" id="roomMax" class="room-cap-input" min="2" max="500"
+                           value="@room.MaxPlayers" @onchange="OnCapacityChanged" />
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:20px">
+            <BoardingList Players="room.Ordered" ShowStatus="true" />
+        </div>
+
+        <div style="margin-top:28px;text-align:center">
+            <div class="eyebrow" style="margin-bottom:14px">Selecciona el Taller de Vuelo</div>
+            <div class="btn-group" style="justify-content:center">
+                @foreach (var workshop in Workshops.Enabled())
+                {
+                    <button type="button" class="btn btn-blue" @onclick="() => Flow.HostLaunch(workshop.Key)">
+                        @workshop.Name
+                    </button>
+                }
+            </div>
+            <p style="font-size:.78rem;color:var(--silver);margin-top:10px">Mínimo 1 pasajero para despegar</p>
+        </div>
+
+        <div class="btn-group" style="justify-content:center;margin-top:22px">
+            <button type="button" class="btn btn-ghost btn-sm" @onclick="Flow.LeaveRoom">Cerrar sala</button>
+        </div>
+    }
+</div>
+
+@code {
+    protected override Screen Id => Screen.HostLobby;
+
+    private void OnCapacityChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var max)) Flow.SetRoomCapacity(max);
+    }
+}

@@ -1,0 +1,137 @@
+@inherits ScreenBase
+
+<div class="@ScreenClass">
+    @if (Flow.Game is { } game)
+    {
+        <div class="flight-strip">
+            <div>
+                <div class="flt-info">VUELO Nº</div>
+                <div class="flt-code">MNM-@(Flow.Room?.Code ?? "001")</div>
+            </div>
+            <div class="flt-route">
+                <span>SDQ</span>
+                <span class="flt-plane-move">✈</span>
+                <div class="flt-progress">
+                    <div class="flt-prog-fill" style="width:@Percent(game.Progress)"></div>
+                </div>
+                <span>MUN</span>
+            </div>
+            <div style="text-align:right">
+                <div class="flt-info">ALTITUD</div>
+                <div class="flt-code">@game.Altitude.ToString("N0", CultureInfo.CurrentCulture) ft</div>
+            </div>
+        </div>
+
+        <div class="game-topbar">
+            <div style="position:relative">
+                <div class="score-lbl">PUNTUACIÓN</div>
+                <div class="score-val">@game.Score.ToString("N0", CultureInfo.CurrentCulture)</div>
+                @if (Flow.FloatingPoints > 0)
+                {
+                    <div class="float-pts" style="position:absolute;left:0;top:0" @key="game.Index">
+                        +@Flow.FloatingPoints
+                    </div>
+                }
+            </div>
+
+            <div style="display:flex;align-items:center;gap:14px">
+                <div>
+                    <div class="score-lbl" style="text-align:center;margin-bottom:5px">RACHA</div>
+                    <div class="streak-dots">
+                        @for (var i = 0; i < 3; i++)
+                        {
+                            var lit = i < Math.Min(game.Streak, 3);
+                            <div class="s-dot @(lit ? "lit" : "") @(lit && game.Multiplier >= 2.0 ? "fire" : "")"></div>
+                        }
+                    </div>
+                </div>
+
+                <div class="timer-ring">
+                    <svg viewBox="0 0 54 54" width="54" height="54">
+                        <circle class="t-bg" cx="27" cy="27" r="23" />
+                        <circle class="t-arc @(Urgent(game) ? "urgent" : "")" cx="27" cy="27" r="23"
+                                stroke-dasharray="@Circumference" stroke-dashoffset="@DashOffset(game)" />
+                    </svg>
+                    <div class="t-num @(Urgent(game) ? "urgent" : "")">@Math.Max(0, game.SecondsLeft)</div>
+                </div>
+
+                <div>
+                    <div class="score-lbl">MULTIPLICADOR</div>
+                    <div class="mult-chip @(game.Multiplier >= 2.0 ? "fire" : "")">
+                        ×@game.Multiplier.ToString("0.0", CultureInfo.InvariantCulture)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Flow.Room is { } room)
+        {
+            <div style="margin-bottom:14px">
+                <div class="eyebrow">En Vuelo — Tabla en Vivo</div>
+                <LeaderboardView Players="room.Ranked" Limit="5" />
+            </div>
+        }
+
+        <div class="card">
+            <div class="q-eyebrow">Pregunta @(game.Index + 1) de @game.Total</div>
+            <div class="q-text">@game.Current.Text</div>
+
+            @if (!string.IsNullOrWhiteSpace(game.Current.Context))
+            {
+                <div class="q-context">@game.Current.Context</div>
+            }
+
+            <div class="opts">
+                @for (var i = 0; i < game.Current.Options.Count; i++)
+                {
+                    var index = i;
+                    <button type="button" class="opt @OptionClass(game, index)" disabled="@game.Answered"
+                            @onclick="() => Flow.Pick(index)">
+                        <span class="opt-letter">@Letters[index]</span>
+                        <span>@game.Current.Options[index]</span>
+                    </button>
+                }
+            </div>
+
+            <div class="feedback @(game.Answered ? "show" : "") @(game.LastAnswerCorrect ? "correct" : "wrong")">
+                <div class="fb-label @(game.LastAnswerCorrect ? "correct" : "wrong")">
+                    @(game.LastAnswerCorrect ? "Respuesta Correcta — Análisis:" : "Incorrecto — Análisis:")
+                </div>
+                <div class="fb-text">@game.Current.Explanation</div>
+                <div class="fb-principle">@game.Current.Principle</div>
+            </div>
+
+            <div class="next-row @(game.Answered ? "show" : "")">
+                <div class="score-lbl">NIVEL @game.Difficulty.Label().ToUpperInvariant()</div>
+                <button type="button" class="btn btn-gold" @onclick="Flow.Next">
+                    @(game.IsLastQuestion ? "Aterrizar →" : "Siguiente →")
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    protected override Screen Id => Screen.Game;
+
+    private const double Circumference = 144.5;
+    private static readonly string[] Letters = ["A", "B", "C", "D"];
+
+    private static bool Urgent(GameSession game) => game.SecondsLeft <= 7;
+
+    private static string Percent(double ratio) =>
+        FormattableString.Invariant($"{ratio * 100:0.##}%");
+
+    private static string DashOffset(GameSession game)
+    {
+        var ratio = Math.Max(0, game.SecondsLeft / (double)game.SecondsMax);
+        return FormattableString.Invariant($"{Circumference * (1 - ratio):0.##}");
+    }
+
+    private static string OptionClass(GameSession game, int index)
+    {
+        if (!game.Answered) return string.Empty;
+        if (index == game.Current.Correct) return game.PickedIndex == index ? "correct" : "reveal";
+        return game.PickedIndex == index ? "wrong" : string.Empty;
+    }
+}

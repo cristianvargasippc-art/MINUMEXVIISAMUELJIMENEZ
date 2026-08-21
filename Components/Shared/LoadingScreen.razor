@@ -1,0 +1,137 @@
+@implements IDisposable
+@inject IJSRuntime Js
+@inject ToastService Toasts
+
+<div id="loadScreen" style="@(_hidden ? "display:none" : _fading ? "opacity:0;transition:opacity 1s ease" : "")">
+    <video id="introVid" playsinline webkit-playsinline muted>
+        <source src="imagenes/video de la candidatura.mp4" type="video/mp4" />
+    </video>
+    <div class="load-overlay"></div>
+
+    <button type="button" class="skip-vid show" @onclick="Finish">SALTAR INTRO</button>
+
+    <button type="button" id="soundBtn" class="@(_soundOn ? "" : "show")" @onclick="EnableSound">
+        <div class="sound-btn-inner">
+            <div class="eq-bars">
+                <div class="eq-bar"></div>
+                <div class="eq-bar"></div>
+                <div class="eq-bar"></div>
+                <div class="eq-bar"></div>
+                <div class="eq-bar"></div>
+            </div>
+            <span class="sound-btn-text">Activar Sonido</span>
+        </div>
+        <span class="sound-btn-sub">Toca para escuchar el video</span>
+    </button>
+
+    <div class="load-ui">
+        <div class="load-tagline">DELEGAME · Academia Diplomática · Flight to Diplomacy</div>
+
+        <div class="load-bar-container">
+            <div class="load-bar-label">
+                <span class="load-bar-label-text">@_label</span>
+                <span class="load-bar-pct">@_percent%</span>
+            </div>
+            <div class="load-bar-track">
+                <div class="load-fill" style="width:@_percent%"></div>
+            </div>
+            <div class="load-bar-glow" style="width:@_percent%"></div>
+        </div>
+
+        <div class="load-dots">
+            @for (var i = 0; i < Steps.Length; i++)
+            {
+                <div class="load-dot @(i < _step ? "done" : i == _step ? "active" : "")"></div>
+            }
+        </div>
+
+        <div class="load-status">@_status</div>
+    </div>
+</div>
+
+@code {
+    private sealed record LoadStep(int Percent, string Label, string Status, int Delay);
+
+    private static readonly LoadStep[] Steps =
+    [
+        new(10, "Iniciando motores…", "Encendiendo sistemas de DELEGAME", 900),
+        new(22, "Revisando pasaportes…", "Verificando documentación de viaje", 1200),
+        new(38, "Cargando módulos…", "Instalando talleres de entrenamiento", 1350),
+        new(54, "Compilando escenarios…", "Preparando sala de sesiones", 1400),
+        new(70, "Sincronizando salas…", "Inicializando multijugador en vivo", 1450),
+        new(88, "Preparando pista…", "Comprobando sistemas de vuelo", 1400),
+        new(100, "¡Pista despejada!", "Bienvenido a DELEGAME", 1300)
+    ];
+
+    private readonly CancellationTokenSource _cancel = new();
+
+    private int _percent;
+    private int _step;
+    private string _label = "Iniciando motores…";
+    private string _status = "Preparando pista de despegue…";
+    private bool _soundOn;
+    private bool _fading;
+    private bool _hidden;
+
+    [Parameter] public EventCallback OnFinished { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await Js.InvokeVoidAsync("delegame.playIntro");
+        await RunSequence();
+    }
+
+    private async Task RunSequence()
+    {
+        try
+        {
+            for (var i = 0; i < Steps.Length; i++)
+            {
+                await Task.Delay(Steps[i].Delay, _cancel.Token);
+
+                var step = Steps[i];
+                _percent = step.Percent;
+                _label = step.Label;
+                _status = step.Status;
+                _step = i;
+                await InvokeAsync(StateHasChanged);
+            }
+
+            await Task.Delay(700, _cancel.Token);
+            await Finish();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task EnableSound()
+    {
+        _soundOn = true;
+        await Js.InvokeVoidAsync("delegame.enableSound");
+        Toasts.Success("¡Sonido activado!", 2000);
+    }
+
+    private async Task Finish()
+    {
+        if (_fading) return;
+        _fading = true;
+
+        await _cancel.CancelAsync();
+        await Js.InvokeVoidAsync("delegame.stopIntro");
+        await InvokeAsync(StateHasChanged);
+
+        await Task.Delay(1000);
+        _hidden = true;
+        await InvokeAsync(StateHasChanged);
+        await OnFinished.InvokeAsync();
+    }
+
+    public void Dispose()
+    {
+        _cancel.Cancel();
+        _cancel.Dispose();
+    }
+}

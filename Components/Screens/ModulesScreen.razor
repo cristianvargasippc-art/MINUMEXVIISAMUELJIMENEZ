@@ -1,0 +1,45 @@
+@inherits ScreenBase
+@inject WorkshopService Workshops
+
+<div class="@ScreenClass">
+    <div style="margin-top:32px">
+        <div class="eyebrow">Destino de Vuelo</div>
+        <h2 class="big-title">Elige tu <em>Taller</em></h2>
+        <div class="divider"><div class="diamond"></div></div>
+    </div>
+
+    <div class="mod-grid">
+        @foreach (var workshop in Workshops.All())
+        {
+            var locked = !Workshops.IsEnabled(workshop.Key);
+
+            <div class="mod-card @(locked ? "locked" : "")" @key="workshop.Key"
+                 @onclick="() => Launch(workshop.Key, locked)">
+                <div class="mod-icon">◆</div>
+                <div class="mod-title">@workshop.Name</div>
+                <p class="mod-desc">@workshop.Description</p>
+                <div class="btn-group">
+                    <span class="badge badge-blue">@workshop.Questions.Count preguntas</span>
+                    @if (locked)
+                    {
+                        <span class="badge badge-red">Bloqueado</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-green">Disponible</span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div style="margin-top:20px">
+        <button type="button" class="btn btn-ghost btn-sm" @onclick="() => Flow.Go(Screen.Home)">← Terminal</button>
+    </div>
+</div>
+
+@code {
+    protected override Screen Id => Screen.Modules;
+
+    private Task Launch(string key, bool locked) => locked ? Task.CompletedTask : Flow.StartSolo(key);
+}

@@ -1,0 +1,64 @@
+@inherits ScreenBase
+
+<div class="@ScreenClass">
+    <div style="margin-top:32px">
+        <div class="eyebrow">Tarjeta de Embarque — @(Flow.Mode == GameMode.Host ? "Piloto" : "Pasajero")</div>
+        <h2 class="big-title">Registro <em>Oficial</em></h2>
+        <div class="divider"><div class="diamond"></div></div>
+    </div>
+
+    <div class="card">
+        <div class="f-wrap">
+            <label class="f-label" for="iName">Nombre del Delegado</label>
+            <input type="text" id="iName" class="f-input" placeholder="Ej: María García" maxlength="40"
+                   value="@Flow.Player.Name" @oninput="e => Flow.Player.Name = e.Value?.ToString() ?? string.Empty" />
+        </div>
+
+        <div class="f-wrap">
+            <label class="f-label" for="iTitle">Título / Cargo (opcional)</label>
+            <input type="text" id="iTitle" class="f-input" placeholder="Ej: Representante Permanente" maxlength="60"
+                   value="@Flow.Player.Title" @oninput="e => Flow.Player.Title = e.Value?.ToString() ?? string.Empty" />
+        </div>
+
+        <div class="f-wrap">
+            <label class="f-label">Avatar de Delegado</label>
+            <p class="hint-text">Selecciona tu representación visual</p>
+            <AvatarPicker IncludePilots="Flow.Mode == GameMode.Host"
+                          SelectedKey="@Flow.Player.AvatarKey"
+                          OnSelected="Flow.SetAvatar" />
+        </div>
+
+        <div class="f-wrap">
+            <label class="f-label" for="iCountry">País o Institución Representada</label>
+            <input type="text" id="iCountry" class="f-input" placeholder="Ej: Colombia, España, ONU..."
+                   maxlength="40" autocomplete="off"
+                   value="@Flow.Player.Country" @oninput="e => Flow.Player.Country = e.Value?.ToString() ?? string.Empty" />
+        </div>
+
+        <div class="divider" style="margin:24px 0"><div class="diamond"></div></div>
+
+        <label class="f-label">Nivel de Dificultad</label>
+        <div class="btn-group" style="margin-top:10px">
+            @foreach (var level in Levels)
+            {
+                <button type="button"
+                        class="btn btn-ghost diff-btn @(Flow.Player.Difficulty == level ? "sel" : "")"
+                        @onclick="() => Flow.Player.Difficulty = level">
+                    @level.Label() (@level.Seconds()s)
+                </button>
+            }
+        </div>
+
+        <div class="btn-group" style="margin-top:28px">
+            <button type="button" class="btn btn-gold btn-lg" @onclick="Flow.Register">Abordar →</button>
+            <button type="button" class="btn btn-ghost" @onclick="() => Flow.Go(Screen.ModeSelect)">← Volver</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override Screen Id => Screen.Register;
+
+    private static readonly Difficulty[] Levels =
+        [Difficulty.Adjunto, Difficulty.Embajador, Difficulty.SecretarioGeneral];
+}

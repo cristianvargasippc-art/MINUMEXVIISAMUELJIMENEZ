@@ -1,0 +1,24 @@
+@inject AvatarCatalog Avatars
+
+<div class="avatar-grid">
+    @foreach (var avatar in Avatars.For(IncludePilots))
+    {
+        <div class="av-cell">
+            <button type="button"
+                    class="av-btn @(avatar.IsPilot ? "av-pilot" : "") @(avatar.Key == SelectedKey ? "sel" : "")"
+                    title="@(avatar.IsPilot ? avatar.Name + " · Piloto" : avatar.Name)"
+                    @onclick="() => Select(avatar)">
+                <img src="@avatar.Uri" alt="@avatar.Name" />
+            </button>
+            <div class="av-name">@avatar.Name</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public bool IncludePilots { get; set; }
+    [Parameter] public string SelectedKey { get; set; } = string.Empty;
+    [Parameter] public EventCallback<Avatar> OnSelected { get; set; }
+
+    private Task Select(Avatar avatar) => OnSelected.InvokeAsync(avatar);
+}

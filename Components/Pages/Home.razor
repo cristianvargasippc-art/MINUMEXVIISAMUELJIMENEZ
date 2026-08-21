@@ -1,0 +1,80 @@
+@page "/"
+@rendermode InteractiveServer
+@implements IDisposable
+@inject GameFlow Flow
+@inject IJSRuntime Js
+
+<SkyBackground />
+<ToastHost />
+
+<div id="planeOverlay" class="@(Flow.ShowPlane ? "on" : "")">
+    <div class="plane-anim">✈</div>
+</div>
+
+<ArrivalOverlay />
+
+<div id="countdownOverlay" class="@(Flow.ShowCountdown ? "on" : "")">
+    <div class="cd-num" @key="Flow.CountdownValue">@Flow.CountdownValue</div>
+    <div class="cd-label">MOTORES ENCENDIDOS — PREPARANDO DESPEGUE</div>
+</div>
+
+@if (!_ready)
+{
+    <LoadingScreen OnFinished="() => _ready = true" />
+}
+
+<header id="hdr" class="@(_ready ? "on" : "")">
+    <div class="hdr-brand">
+        <span class="hdr-plane">✈</span>
+        DELEGAME
+    </div>
+    <div class="hdr-right">
+        <div class="hdr-player">
+            @if (string.IsNullOrEmpty(Flow.Player.Name))
+            {
+                <text>—</text>
+            }
+            else
+            {
+                <AvatarCircle Uri="@Flow.Player.AvatarUri" Size="28"
+                              Extra="border:2px solid var(--gold);margin-right:7px;box-shadow:0 0 8px rgba(240,192,64,.3);" />
+                @Flow.Player.Name
+            }
+        </div>
+        @if (Flow.Game is { } game && Flow.Screen is Screen.Game or Screen.Results)
+        {
+            <div class="hdr-score-chip">@game.Score.ToString("N0", CultureInfo.CurrentCulture) pts</div>
+        }
+    </div>
+</header>
+
+<div id="app">
+    <HomeScreen />
+    <ModeSelectScreen />
+    <RegisterScreen />
+    <JoinScreen />
+    <HostLobbyScreen />
+    <PlayerLobbyScreen />
+    <ModulesScreen />
+    <GameScreen />
+    <ResultsScreen />
+    <AdminScreen />
+</div>
+
+@code {
+    private bool _ready;
+    private Screen _lastScreen = Screen.Home;
+
+    protected override void OnInitialized() => Flow.Changed += Refresh;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_lastScreen == Flow.Screen) return;
+        _lastScreen = Flow.Screen;
+        await Js.InvokeVoidAsync("delegame.scrollTop");
+    }
+
+    private Task Refresh() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Flow.Changed -= Refresh;
+}

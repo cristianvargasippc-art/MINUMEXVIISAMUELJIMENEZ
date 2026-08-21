@@ -1,0 +1,19 @@
+@inherits FlowComponent
+
+<div id="arrivalScreen" class="@(Flow.ShowArrival ? "on" : "")">
+    <div class="arrival-plane">✈</div>
+    <div class="arrival-sub">DELEGAME AIRLINES · VUELO DIPLOMÁTICO</div>
+    <div class="arrival-title">¡HEMOS ATERRIZADO!</div>
+    <div class="arrival-dest">MINUME XVII · TRASCENDIENDO FRONTERAS</div>
+    <div class="arrival-sga">
+        <AvatarCircle Uri="@Flow.Player.AvatarUri" Size="48"
+                      Extra="margin-right:10px;border:2px solid var(--gold);" />
+        @Flow.Player.Name · @Flow.Player.Country
+    </div>
+    <div style="margin-top:32px">
+        <div class="btn-group" style="justify-content:center">
+            <button type="button" class="btn btn-gold btn-lg" @onclick="() => Flow.CloseArrival(true)">Ver Resultados</button>
+            <button type="button" class="btn btn-ghost" @onclick="() => Flow.CloseArrival(false)">Terminal</button>
+        </div>
+    </div>
+</div>

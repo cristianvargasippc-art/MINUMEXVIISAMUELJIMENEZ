@@ -1,0 +1,17 @@
+<div class="leaderboard">
+    @foreach (var (player, index) in Players.Take(Limit).Select((p, i) => (p, i)))
+    {
+        <div class="lb-row" @key="player.Id">
+            <div class="lb-rank @(index < 3 ? "top" + (index + 1) : "")">@(index + 1)</div>
+            <div class="lb-avatar"><AvatarCircle Uri="@player.AvatarUri" Size="24" /></div>
+            <div class="lb-name">@player.Name</div>
+            <div class="lb-country">@player.Country</div>
+            <div class="lb-score">@player.Score.ToString("N0", CultureInfo.CurrentCulture)</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<RoomPlayer> Players { get; set; } = [];
+    [Parameter] public int Limit { get; set; } = 5;
+}
